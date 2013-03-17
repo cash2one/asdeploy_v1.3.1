@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<title>doc</title>
+	<meta name="description" content="" />
+	<meta name="viewport" content="width=device-width; initial-scale=1.0" />
+	
+	<link href="css/bootstrap.css" rel="stylesheet"/>
+	<link href="css/docs.css" rel="stylesheet"/>
+	<link href="css/prettify.css" rel="stylesheet" />
+</head>
+<body>
+	<header>
+	</header>
+	<nav>
+	</nav>
+	<div>
+		<div style="margin: 0px auto 0px; width: 940px;">
+			<section id="sec_1">
+				<div class="page-header">
+					<h1 style="text-align: center;">Javascript与Java语法对照</h1>
+				</div>
+				
+				<h4>变量的声明和使用</h4>
+				<div class="row">
+					<div class="span6">
+<pre class="prettyprint linenums">
+var a = '123';
+var b = 12,
+    c = true;
+</pre>
+					</div>
+					<div class="span6">
+<pre class="prettyprint linenums">
+String a = "123";
+int b = 12;
+boolean c = true;
+</pre>
+					</div>
+				</div>
+				<!--------------分割线-------------->
+				<h4>对象的声明和使用</h4>
+				<div class="row">
+					<div class="span6">
+<pre class="prettyprint linenums">
+// 声明对象
+var obj = {};
+// 赋值取值
+obj.key1 = 'value1';
+obj['key2'] = 'value2';
+var v1 = obj['key1'];
+var v2 = obj.key2;
+// 循环
+for(var key in obj){
+    console.log(key + ': ' + obj[key]);
+}
+// 删除键值对
+delete obj['key1']; // for Firefox, Chrome etc.
+obj['key1'] = undefined; // for IE;
+</pre>
+					</div>
+					<div class="span6">
+<pre class="prettyprint linenums">
+// js中的对象更接近于Java中的Map
+Map&lt;String, Object&gt; m = new HashMap&lt;String, Object&gt;();
+// 取值赋值
+m.put("key1", "value1");
+m.put("key2", "value2");
+String v1 = (String) m.get("key1");
+String v2 = (String) m.get("key2");
+// 循环
+for(String key: m.keySet()){
+    System.out.println(key + ": " + m.get(key));
+}
+// 删除键值对
+m.remove('key1')
+</pre>
+					</div>
+				</div>
+				<!--------------分割线-------------->
+				<h4>数组的声明和使用</h4>
+				<div class="row">
+					<div class="span6">
+<pre class="prettyprint linenums">
+// 声明数组
+var arr1 = [];
+var arr2 = [1, '2', true, {}];
+
+
+// 添加删除元素
+arr1.push('0');
+arr1[1] = '1';
+var v = arr1[0];
+
+v = arr2.pop();		//删除最后一个元素
+arr2.splice(2, 1);	//删除第3个元素
+v = arr2.shift();	//删除第0个元素
+
+// 循环
+for(var i=0, l=arr2.length; i&lt;l; i++){
+    console.log(arr2[i])
+}
+</pre>
+					</div>
+					<div class="span6">
+<pre class="prettyprint linenums">
+// js中的数组更接近于Java中的List
+List&lt;Object&gt; list1 = new ArrayList&lt;Object&gt;();
+List&lt;Object&gt; list2 = Arrays.asList(new Object[]{1, "2", true, new Object()});
+
+// 添加删除元素
+list1.add("0");
+list1.add(1, "1");
+Object v = list1.get(0);
+
+v = list1.remove(list1.size() - 1);  //删除最后一个元素
+list2.remove(2)		//删除第3个元素
+list2.remove(0)		//删除第0个元素
+
+// 循环
+for(int i=0, l=list2.size(); i&lt;l; i++){
+    System.out.println(list2.get(i));
+}
+</pre>
+					</div>
+				</div>
+				<!--------------分割线-------------->
+				<h4>函数的声明和使用</h4>
+				<div class="row">
+					<div class="span6">
+<pre class="prettyprint linenums">
+// 声明函数有三种方法，但是真正使用的只有两种
+function method1(value){
+	console.log('hello ' + value);
+}
+var method2 = function(obj){
+	if(typeof obj == 'function'){
+		obj('Javascript');
+	} else {
+		console.log('hello ' + obj);
+	}
+}
+
+// 调用函数
+method1('Ablesky');
+//output&gt;&gt; hello Ablesky
+method2(method1);
+//output&gt;&gt; hello Javascript
+</pre>
+					</div>
+					<div class="span6">
+<pre class="prettyprint linenums">
+</pre>
+					</div>
+				</div>
+				<!--------------分割线-------------->
+								<h4>类的声明和使用</h4>
+				<div class="row">
+					<div class="span6">
+<pre class="prettyprint linenums">
+// 类的声明(js只能声明public的类属性)
+function User(username, password){
+    this.username = username;
+    this.password = password;
+}
+User.prototype = {
+    sayHi: function(){
+        console.log('Hi, ' + this.username);
+    },
+    toString: function(){
+        return 'username: ' + this.username;
+    }
+}
+/* 本质上js并不是面向对象的语言
+ * 因此js中并没有完整的类的概念
+ * 但是前辈们在充分发挥主观能动性后
+ * 用原型链的方式模拟了类的构造甚至是继承
+ * 这种手法在前端UI中有着重要的应用(例如Ext)
+ */
+
+// 类的使用
+var user1 = new User('u1', '1234');
+user1.sayHi()
+// output>> Hi, u1
+console.log(user1)
+// output>> username: u1
+console.log(user1 instanceof User);
+// output>> true
+</pre>
+					</div>
+					<div class="span6">
+<pre class="prettyprint linenums">
+// 类的声明
+public class User{
+	
+    public String username;
+    public String password;
+
+    pubic User(String username, String password){
+        this.username = username;
+        this.password = password;
+    }
+
+    public void sayHi(){
+        System.out.println("Hi, " + this.username);
+    }
+
+    pubic String toString(){
+        return "username: " + this.username;
+    }
+}
+
+// 类的使用
+User user1 = new User("u1", "1234");
+user1.sayHi();
+// output>> Hi, u1
+System.out.println(user1);
+// output>> username: u1
+System.out.println(user1 instanceof User);
+// output>> true;
+</pre>
+					</div>
+				</div>
+				<!--------------分割线-------------->
+				<h4>待续</h4>
+				<div class="row">
+					<div class="span6">
+<pre class="prettyprint linenums">
+</pre>
+					</div>
+					<div class="span6">
+<pre class="prettyprint linenums">
+</pre>
+					</div>
+				</div>
+				<!--------------分割线-------------->
+			</section>
+		</div>
+		
+	</div>
+	<footer>
+	</footer>
+	<script src="js/jquery.js"></script>
+	<script src="js/bootstrap.js"></script>
+	<script src="js/prettify.js"></script>
+	<script src="js/application.js"></script>
+</body>
+</html>

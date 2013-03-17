@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block style %}
+<style>
+	div.wrap {
+		text-align: center;
+		padding-top: 100px;
+	}
+	div.wrap label{
+		display: inline-block;
+		width: 150px;
+		text-align: right;
+		margin-left: -80px;
+	}
+	div.wrap form {
+		margin-left: -20px;
+	}
+	div.wrap p {
+		margin-top: 0px;
+	}
+	.error_info {
+		font-size:25px;
+		color: red;
+	}
+	.errorlist{
+		list-style:none;
+		font-size:15px;
+		color: red;	
+	}
+	ul.errorlist{
+		margin: 0px;
+		padding: 0px;
+	}
+	ul.errorlist li {
+	}
+	.btn {
+		font-size: 16px;
+	}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+	<h1>用户注册</h1>
+	{% if error_message %}
+	<span class="error_info">{{error_message}}</span>
+	{% endif %}
+	<form method="post" action=".">
+		{% csrf_token %}
+		{{ form.as_p }}
+		<span style="display:inline-block; width: 20px;"></span>
+		<input class="btn" type="submit" value="注册"/>
+		<input class="btn" type="button" value="返回" onclick="window.location.href='/login/'"/>
+	</form>
+</div>
+{% endblock %}

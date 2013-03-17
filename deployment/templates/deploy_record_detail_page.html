@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block style %}
+<style>
+	div.wrap {
+		text-align: center;
+		padding-top: 50px;
+	}
+	div.sect_wrap {
+		width: 750px;
+		margin: 0px auto 50px;
+	}
+	.sect_title {
+		float: left;
+		font-size: 20px;
+		font-weight: bold;
+	}
+	.sect_content {
+		margin: 0px auto;
+		overflow-y: scroll;
+		font-size: 15px;
+		width: 750px;
+		height: 300px;
+	}
+	div.basic_info h3 {
+		font-size: 20px;
+	}
+	
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrap">
+	<h2>发布详情</h2>
+	<div class="basic_info">
+		<h3>发布者: {{record.user.username}}</h3>
+		<h3>发布类型: {{record.deploy_item.deploy_type}}</h3>
+		<h3>上传文件名: </h3>
+		<h3>{{record.deploy_item.file_name}}</h3>
+	</div>
+	<div class="sect_wrap">
+		<div class="sect_title">
+			<label>readme</label>
+		</div>
+		<br/>
+		<textarea readonly="readonly" class="sect_content">{{readme}}</textarea>
+	</div>
+	
+	<div class="sect_wrap">
+		<div class="sect_title">
+			<label>发布文件列表</label>
+		</div>
+		<br/>
+		<textarea readonly="readonly" class="sect_content">{{fileList}}</textarea>
+	</div>
+	
+	<div class="sect_wrap"  style="display:none;">
+		<div class="sect_title">
+			<label>发布日志</label>
+		</div>
+		<br/>
+		<textarea readonly="readonly" class="sect_content"></textarea>
+	</div>
+</div>
+{% endblock %}

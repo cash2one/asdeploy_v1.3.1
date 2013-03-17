@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+{% block style %}
+<link style="text/css" rel="stylesheet" href="/static_files/ztree/css/zTreeStyle.css"/>
+<style>
+	div.wrap {
+		text-align: center;
+		padding-top: 50px;
+		width: 800px;
+		margin: 0px auto;
+		position: relative;
+	}
+	div.sect_wrap {
+		width: 800px;
+		text-align: left;
+		margin: 0px auto 20px;
+	}
+	div.sect_wrap input {
+		font-size: 16px;
+	}
+	div.sect_wrap span {
+		font-size: 14px;
+	}
+	div.sect_wrap select {
+		font-size: 16px;
+	}
+	div.sect_wrap label {
+		display: inline-block;
+		width: 150px;
+		font-size: 20px;
+	}
+	div.sect_wrap textarea {
+		font-size: 20px;
+		width: 800px;
+		height: 200px;
+	}
+	
+	#checkServerUl {
+		list-style: none;
+	}
+	
+	#projectSelectArea {
+		padding-top: 20px;
+	}
+	
+	#projectSelectArea span {
+		font-size: 20px;
+	}
+	
+	#fileTreeWrap{
+		height: 400px;
+		overflow-y: auto;
+		border: 1px solid #aaa;
+		padding-left: 20px;
+		padding-top: 10px;
+	}
+	
+	#serverListUl {
+		margin: 0px 0px 20px;
+		padding: 0px;
+		list-style: none;
+		font-size: 20px;
+		font-weight: bolder;
+	}
+	#serverListUl li {
+		margin-left: 255px;
+	}
+</style>
+{% endblock %}
+
+{% block native_js %}
+<script src="/static_files/js/ajaxfileupload.js"></script>
+<script type="text/javascript" src="/static_files/ztree/js/jquery.ztree.all-3.2.js"></script>
+<script type="text/javascript" src="/static_files/js/editableSuffixTool.js"></script>
+<script>
+(function($){
+    $.fn.preventScroll = function(){
+        var _this = this.get(0);
+        if($.browser.mozilla){
+            _this.addEventListener('DOMMouseScroll',function(e){
+                _this.scrollTop += e.detail > 0 ? 60 : -60;   
+                e.preventDefault();
+            },false); 
+        }else{
+            _this.onmousewheel = function(e){   
+                e = e || window.event;   
+                _this.scrollTop += e.wheelDelta > 0 ? -60 : 60;   
+                e.returnValue = false  
+            };
+        }
+        return this;
+    };
+})(jQuery);
+</script>
+<script>
+var csrfToken = $('input[name=csrfmiddlewaretoken]').val();
+var serverInfoJson = '{{serverInfo}}'.replace(/&quot;/ig, '\'');
+var serverInfo = eval('(' + serverInfoJson + ')');
+
+$(function(){
+	$('#showFileTreeAreaBtn').click(function(){
+		var projectInfo = $('#selProject').val() || '';
+		var projectInfoArr = projectInfo.split('|');
+		if(!projectInfoArr || projectInfoArr.length == 0){
+			alert('工程选择错误!');
+			return;
+		}
+		var projectId = parseInt(projectInfoArr[0]),
+			projectName = projectInfoArr[1],
+			projectWarName = projectInfoArr[2];
+		var servers = $('#checkServerUl input:checked');
+		if(servers.size() == 0){
+			alert('请至少选择一个服务器!');
+			return;
+		}
+		var serverIdxArr = servers.map(function(idx, val){
+			return val.value;
+		});
+		serverIdxArr = $.makeArray(serverIdxArr);
+		var firstServerIdx = serverIdxArr[0];
+		var folderType = $('input[name=folderType]:checked').val();
+		var treeObj = initFileTree(projectId, projectWarName, firstServerIdx, serverInfo[projectName][firstServerIdx], folderType);
+		if(!treeObj){
+			alert('当前浏览器不支持此功能!');
+			return;
+		}
+		
+		// 刷新服务器列表
+		var $serverListUl = $('#serverListUl');
+		$serverListUl.children().remove();
+		for(var i=0; i<serverIdxArr.length; i++){
+			$serverListUl.append('<li>' + serverInfo[projectName][serverIdxArr[i]] + '</li>');
+		}
+		
+		$('#projectSelectArea').slideUp('fast');
+		$('#fileTreeArea').slideDown('fast');
+		
+		
+		$('#openSelectedFileBtn').off('click');
+		$('#renameSelectedFileBtn').off('click');
+		$('#backupSelectedFileBtn').off('click');
+		$('#downloadSelectedFileBtn').off('click');
+		$('#openSelectedFileBtn').click(function(){
+			var nodes = treeObj.getSelectedNodes();
+			if(!nodes || !nodes[0] || nodes[0].isParent){
+				alert('请先选中文件!');
+				return;
+			} 
+			node = nodes[0]
+			if(!isFileEditable(node.name)){
+				alert('不支持对当前格式的文件进行编辑!');
+				return;
+			}
+			var urlArr = [projectId, serverIdxArr.join('_')];
+			var url = '/openOnlineFile/' + urlArr.join('/') + '/' 
+				+ '?file_path=' + encodeURIComponent(node.file_path) 
+				+ '&file_name=' + encodeURIComponent(node.name)
+				+ '&folder_type=' + folderType;
+			var width = 1000,
+				height = 700;
+			var left = Math.round((screen.availWidth - width)/2),
+				top = Math.round((screen.availHeight - height)/2);
+			var optionArr = [];
+			optionArr.push('width=' + width);
+			optionArr.push('height=' + height);
+			optionArr.push('left=' + left);
+			optionArr.push('top=' + top);
+			optionArr.push('location=no');
+			optionArr.push('menu=no');
+			optionArr.push('toolbar=no');
+			optionArr.push('scrollbars=no');
+			optionArr.push('resizable=no');
+			window.open(url, '_blank', optionArr.join(','));
+		});
+		
+		$('#renameSelectedFileBtn').click(function(){
+			var nodes = treeObj.getSelectedNodes();
+			if(!nodes || !nodes[0] || nodes[0].isParent){
+				alert('请先选中文件!');
+				return;
+			}
+			node = nodes[0];
+			var newFileName = prompt('请为文件[' + node.name + '] 指定新的文件名', node.name);
+			if(!newFileName){
+				return
+			}
+			if(!/^[\w\._-]+$/.test(newFileName)){
+				alert('文件名不合法!');
+				return;
+			}
+			var parentNode = node.getParentNode();
+			var urlArr = [projectId, serverIdxArr.join('_')];
+			var url = '/renameOnlineFile/' + urlArr.join('/') + '/';
+			$.post(url, {
+				parent_folder_path: parentNode.file_path,
+				old_file_name: node.name,
+				new_file_name: newFileName,
+				folder_type: folderType,
+			}, function(data){
+				var result = null;
+				try{
+					result = $.parseJSON(data);
+				}catch(e) {
+				}
+				if(result && result.isSuccess){
+					node.name = newFileName;
+					node.file_path = parentNode.file_path + '/' + newFileName;
+					treeObj.updateNode(node);
+					alert(result.resultMsg);
+				}else{
+					alert('重命名失败!');
+				}
+			});
+		});
+		
+		$('#backupSelectedFileBtn').click(function(){
+			var nodes = treeObj.getSelectedNodes();
+			if(!nodes || !nodes[0] || nodes[0].isParent){
+				alert('请先选中文件!')
+				return;
+			}
+			node = nodes[0];
+			if(!confirm('确定对选中文件 [ '+ node.name + ' ] 按时间戳按时间戳进行备份?')){
+				return;
+			}
+			var parentNode = node.getParentNode();
+			var urlArr = [projectId, serverIdxArr.join('_')];
+			var url = '/backupOnlineFile/' + urlArr.join('/') + '/';
+			$.post(url, {
+				parent_folder_path: parentNode.file_path,
+				file_name: node.name,
+				folder_type: folderType,
+			}, function(data){
+				console.dir(data);
+				var result = null;
+				try{
+					result = $.parseJSON(data);
+				}catch(e) {
+					result = null;
+				}
+				console.dir(result);
+				if(result && result.isSuccess){
+					alert(result.resultMsg);
+					treeObj.reAsyncChildNodes(parentNode, 'refresh');
+				}else{
+					alert('备份失败!');
+				}
+			});
+		});
+		
+		$('#downloadSelectedFileBtn').click(function(){
+			var nodes = treeObj.getSelectedNodes();
+			if(!nodes || !nodes[0] || nodes[0].isParent){
+				alert('请先选中文件!')
+			} else {
+				node = nodes[0];
+				url = '/downloadProjectFile/' + projectId + '/' + firstServerIdx 
+					+ '/?file_path=' + encodeURIComponent(node.file_path) 
+					+ '&file_name=' + encodeURIComponent(node.name)
+					+ '&folder_type=' + folderType;
+				window.open(url, 'downloadFileFrame')
+			}
+		});
+	});
+	
+	$('#showProjectSelectAreaBtn').click(function(){
+		$('#openSelectedFileBtn').off('click');
+		$('#renameSelectedFileBtn').off('click');
+		$('#backupSelectedFileBtn').off('click');
+		$('#downloadSelectedFileBtn').off('click');
+		$('#projectSelectArea').slideDown('fast');
+		$('#fileTreeArea').slideUp('fast');
+	});
+	$('#selProject').change(function(){
+		var $ul = $('#checkServerUl');
+		$ul.children().remove();
+		var $this = $(this);
+		var val = $this.val();
+		var serverArr = serverInfo[val.split('|')[1]];
+		if(!serverArr || serverArr.length == 0){
+			return;
+		}
+		for(var idx=0; idx<serverArr.length; idx++){
+			$('<li>').append(
+				$('<input>').attr({
+					type: 'checkbox',
+					checked: true,
+					name: 'servers',
+					value: idx
+				})
+			).append('<span style="font-size: 20px;">' + serverArr[idx] + '</span>')
+			.appendTo($ul);
+		}
+	}).change();
+	
+	
+});
+
+//init file tree
+function initFileTree(projectId, projectWarName, serverIdx, serverName, folderType){
+	$('#fileTre').children().remove();
+	try{
+		var setting = {
+			async: {
+				enable: true,
+				url: function(treeId, treeNode){
+					params = 'id'
+					urlArr = ['getProjectFileNodes', projectId, serverIdx, treeNode.id]
+					return '/' + urlArr.join('/') + '/?file_path=' + encodeURIComponent(treeNode.file_path) + '&folder_type=' + folderType;
+				},
+				view: {
+					expandSpeed: ''
+				},
+				data: {
+					simpleData: {
+						enable: true
+					}
+				}
+			}
+		};
+		var treeName = folderType == 'conf'? 'tomcat_conf': projectWarName;
+		var zNodes =[
+			{name: treeName + '@' + serverName, id: '0', isParent:true, file_path: ''},
+		]
+		$.fn.zTree.init($("#fileTree"), setting, zNodes);
+		$('#fileTreeWrap').preventScroll();
+		var treeObj = $.fn.zTree.getZTreeObj('fileTree');
+		return treeObj
+	}catch(e){
+		return null;
+	}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div style="display:none">
+	<iframe name="downloadFileFrame"></iframe>
+</div>
+<div class="wrap">
+	<h2>编辑线上文件</h2>
+	<div class="sect_wrap">
+		<div style="margin-left: 250px;">
+			<input type="button" id="showFileTreeAreaBtn" value="显示线上文件" />
+			<input type="button" id="showProjectSelectAreaBtn" value="选择工程和服务器"/>
+		</div>
+		<div id="projectSelectArea" style="margin-left: 250px;">
+			<label>请选择工程:</label>
+			<select id="selProject">
+				{% for project in projects %}
+					<option value="{{project.id}}|{{project.name}}|{{project.war_name}}">{{project.name}}</option>
+				{% endfor %}
+			</select>
+			<br/>
+			<label>目录类型:</label>
+			<span>
+				<input type="radio" name="folderType" value="apps" checked="checked"/>APPS
+			</span>
+			<span>
+				<input type="radio" name="folderType" value="conf"/>CONF
+			</span>
+			<br/><br>
+			<label>选择服务器:</label>
+			<br/>
+			<ul id="checkServerUl">
+			</ul>
+		</div>
+		<div id="fileTreeArea" style="padding-top: 20px; display: none;">
+			<div>
+				<ul id="serverListUl"></ul>
+			</div>
+			<input type="button" value="打开选中的文件" id="openSelectedFileBtn"/>
+			<input type="button" value="重命名选中文件" id="renameSelectedFileBtn"/>
+			<input type="button" value="备份选中文件" id="backupSelectedFileBtn"/>
+			<input type="button" value="下载选中文件" id="downloadSelectedFileBtn"/>
+			<div id="fileTreeWrap">
+				<ul id="fileTree" class="ztree"></ul>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

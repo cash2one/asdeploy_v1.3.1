@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block style %}
+<style>
+	div.wrap {
+		text-align: center;
+		padding-top: 50px;
+	}
+	div.wrap label {
+		font-size: 20px;
+	}
+	div.wrap select {
+		font-size: 20px;
+		width: 110px;
+	}
+	div.wrap input {
+		font-size: 18px;
+		width: 110px;
+	}
+	div.sub_wrap {
+		width: 300px;
+		margin: 0px auto 30px;
+	}
+	ul.option_wrap {
+		margin:0px auto;
+		padding: 0px;
+		width: 300px;
+		height: 300px;
+		list-style: none;
+		border: 1px solid #333;
+		overflow-y: auto;
+	}
+	ul.option_wrap li {
+		font-size: 20px;
+		padding: 10px;
+		margin: 0px;
+		cursor: pointer;
+	}
+	#submitBtn {
+		font-size: 20px;
+	}
+	.error_msg {
+		font-size: 20px;
+		color: red;
+	}
+</style>
+{% endblock %}
+
+{% block native_js %}
+<script>
+$(function(){
+	$liArr = $('ul.option_wrap').children('li')
+		.filter(':nth-child(2n+1)').css({'backgroundColor': '#eee'})
+		.end();
+	$liArr.click(function(){
+		$liArr.css({backgroundColor: '', color: '', fontWeight: ''})
+			.filter(':nth-child(2n+1)').css({'backgroundColor': '#eee'});
+		var $this = $(this).css({backgroundColor: '#999', color: '#fff', fontWeight: 'bolder'});
+		$('#project').val($this.children('input:first').val());
+	});
+	$('#submitBtn').click(function(){
+		if(!submitCheck()){
+			return;
+		}
+		$('#deployInitOptionForm').submit();
+	});
+})
+function submitCheck(){
+	if(!$('#project').val()){
+		alert('请选择工程!');
+		return false;
+	}
+	if(!$('#deployType').val()){
+		alert('请选择发布类型!');
+		return false;
+	}
+	if(!/^\d+(\.\d+)+$/.test($('#version').val())){
+		alert('请输入正确的版本号!\n例如 "5.13"');
+		return false;
+	}
+	return true;
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+	<h2>请选择工程和发布环境</h2>
+	<div style="height: 25px; padding-top: 20px;">
+		{% if error_msg %}
+		<span class="error_msg">{{error_msg}}</span>
+		{% endif %}
+	</div>
+
+	<form method="post" action="." id="deployInitOptionForm">
+		{% csrf_token %}
+		<input type="hidden" value="" name="projId" id="project"/>
+		<div class="sub_wrap">
+			<label>发布类型:</label>
+			<select name="deployType" id="deployType">
+				<option value="">请选择...</option>
+				<option value="war">war包</option>
+				<option value="patch">补丁</option>
+			</select>
+		</div>
+		<div class="sub_wrap">
+			<label>版本号:</label>
+			<input id="version" name="version" />
+		</div>
+		<div class="subwrap">
+			<label>要发布的工程</label>
+			<br/>
+			<div>
+				<ul class='option_wrap'>
+					{% for project in projects %}
+						<li>
+							<input type="hidden" value="{{project.id}}"/>
+							{{ project.name }}
+						</li>
+					{% endfor %}
+				</ul>
+			</div>
+			<br/>
+		</div>
+		<input type="button" value="确定" id="submitBtn"/>
+	</form>
+</div>
+{% endblock %}

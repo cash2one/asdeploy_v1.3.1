@@ -1,0 +1,41 @@
+.page_bar {
+	height: 40px;
+	float: right;
+	text-align: right;
+}
+.page_bar div.btn_grp {
+	margin: 0px;
+	padding: 0px;
+	display: inline-block;
+}
+.page_bar .btn_grp div{
+	display: inline-block;
+	margin: 5px;
+	text-align: center;
+	line-height: 20px;
+	float: left;
+	width: 20px;
+	height: 20px;
+}
+.page_bar .btn_grp .btn{
+	border: 2px solid #333;
+	background: #eee;
+	cursor: pointer;
+}
+.page_bar .btn_grp .cur_sel {
+	color: #fff;
+	font-weight: bolder;
+	background: #bbb;
+}
+.page_bar .cur_page_panel {
+	display: inline-block;
+	margin: 0px;
+	padding: 0px;
+	line-height: 20px;
+	font-size: 16px;
+	font-weight: bolder;
+}
+.page_bar .cur_page_panel a {
+	text-decoration: none;
+	color: #000;
+}

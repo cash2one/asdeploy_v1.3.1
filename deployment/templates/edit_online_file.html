@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>编辑线上文件</title>
+<style>
+
+#fileInfoArea {
+	font-size: 16px;
+}
+
+#fileInfoArea label {
+	display: inline-block;
+	width: 100px;
+	font-weight: bolder;
+	text-align: right;
+}
+#fileInfoArea span {
+	font-size: 18px;
+}
+
+#editAreaWrap {
+	border: 1px solid #333;
+}
+
+.CodeMirror {
+	height: 500px !important;
+	font-size: 16px !important;
+}
+.CodeMirror-scroll {
+	height: 500px !important;
+}
+.activeline {
+	background: #e8f2ff !important;
+}
+</style>
+<link rel="stylesheet" type="text/css" href="/static_files/codemirror/lib/codemirror.css"/>
+<script type="text/javascript" src="/static_files/codemirror/lib/codemirror.js"></script>
+<script type="text/javascript" src="/static_files/codemirror/lib/util/loadmode.js"></script>
+<script type="text/javascript" src="/static_files/js/jquery.js"></script>
+<script type="text/javascript" src="/static_files/js/ajaxsetup_for_django.js"></script>
+<script type="text/javascript" src="/static_files/js/editableSuffixTool.js"></script>
+<script>
+var serverInfoJson = '{{serverInfo}}'.replace(/&quot;/ig, '\'');
+var serverInfo = eval('(' + serverInfoJson + ')');
+var projectId = '{{project.id}}';
+var projectName = '{{project.name}}';
+var serverIdxList = '{{serverIdxList}}';
+var serverIdxArr = serverIdxList.split('_');
+var filePath = '{{filePath}}';
+var filename = '{{fileName}}';
+var folderType = '{{folderType}}';
+$(function(){
+	var oriContent = $('#editArea').val();
+
+	var serverListHtmlArr = [];
+	for(var i=0; i<serverIdxArr.length; i++){
+		serverListHtmlArr.push('<span>' + serverInfo[projectName][serverIdxArr[i]] + '</span>');
+	}
+	$('#serverListWrap').append(serverListHtmlArr.join('<br/><label></label>&nbsp;'));
+	
+	$('#saveBtn').click(function(){
+		if (!confirm('确认将当前编辑器中的内容保存到线上文件?')){
+			return;
+		}
+		editor.save();
+		var url = '/saveFileFromOnlineEditor/' + projectId + '/' + serverIdxList + '/';
+		$.post(url, {
+			file_path: filePath,
+			file_name: filename,
+			file_content: editor.getValue(),
+			folder_type: folderType,
+		}, function(data){
+			var result = null;
+			try{
+				result = $.parseJSON(data);
+			}catch(e) {
+			}
+			if(result && result.isSuccess){
+				alert(result.resultMsg);
+			}else{
+				alert('保存失败!');
+			}
+		});
+	});
+	
+	$('#resetBtn').click(function(){
+		if (!confirm('确认将当前编辑器中的内容恢复到初始状态?')){
+			return;
+		};
+		editor.setValue(oriContent);
+		editor.save();
+	});
+	
+	// init editor
+	CodeMirror.modeURL = '/static_files/codemirror/mode/%N/%N.js';
+	editorOption = {
+		lineNumbers: true,
+		tabSize: 4,
+		indentUnit: 4,
+	}
+	var editor = CodeMirror.fromTextArea($('#editArea')[0], editorOption);
+	var mode = findEditModeByFilename(filename);
+	if(mode){
+		switchMode(editor, mode);
+	}
+});
+function switchMode(editor, mode){
+	editor.setOption('mode', mode);
+	CodeMirror.autoLoadMode(editor, mode);
+}
+</script>
+</head>
+<body>
+<div id="wrap">
+	<div id="fileInfoArea" style="">
+		<div>
+			<label>工程名:</label>
+			<span>{{project.name}}</span>
+		</div>
+		<div id="serverListWrap">
+			<label>服务器列表:</label>
+		</div>
+		<div>
+			<label>根目录类型:</label>
+			<span>{{folderType}}</span>
+		</div>
+		<div>
+			<label>文件路径:</label>
+			<span>{{filePath}}</span>
+		</div>
+	</div>
+	<br/>
+	<div id="operPannel">
+		<input id="saveBtn" type="button" value="保存" style="font-size:16px;" />
+		<input id="resetBtn" type="button" value="重置" style="font-size:16px;" />
+	</div>
+	<div id="editAreaWrap">
+		<textarea id="editArea">{{content}}</textarea>
+	</div>
+</div>
+</body>
+</html>

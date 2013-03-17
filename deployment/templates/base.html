@@ -1,0 +1,53 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>{% block title %}{% endblock %}</title>
+{% block style %}{% endblock %}
+<link style="text/css" rel="stylesheet" href="/static_files/css/style.css" />
+<script type="text/javascript" src="/static_files/js/jquery.js"></script>
+<script type="text/javascript" src="/static_files/js/ajaxsetup_for_django.js"></script>
+<script>
+$(function(){
+	$.getJSON('/checkVersionAndEnv/', function(data){
+		if(data.environment) {
+			var envLogo = data.environment.toUpperCase()
+			$('#env_logo').html(envLogo.toUpperCase());
+			if(envLogo == 'ERROR'){
+				$('#env_logo').css({color: 'red'});
+			}
+		}
+	});
+	
+	$('#env_logo').click(function(){
+		$.getJSON('/checkVersionAndEnv/', function(data){
+			if(data.version && data.environment){
+				var str = '代码发布系统 V' + data.version + '\n'
+					+ '当前发布环境 ' + data.environment;
+				if(data.environment == 'error'){
+					str += '\n请查看发布系统所在服务器的hostname!'
+				}
+				alert(str);
+			}
+		});
+	});
+});
+</script>
+{% block native_js %}{% endblock %}
+</head>
+<body>
+<div id="nav">
+	<span class="env_logo" id="env_logo"></span>&nbsp;
+	{% if user.is_authenticated %}
+		<a href="/">首页</a> |
+		<a href="/user/{{user.username}}">{{ user.username }}</a> |
+		<a href="/logout">退出</a>
+	{% else %}
+		<a href="/login">登录</a> |
+		<a href="/register">注册</a>
+	{% endif %}
+</div>
+{% block content %}{% endblock %}
+</body>
+</html>
