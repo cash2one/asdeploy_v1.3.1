@@ -27,6 +27,8 @@ elif HOSTNAME.find('.bt1.') > 0:
     ENVIRONMENT = 'beta'
 elif HOSTNAME.find('.ot1.') > 0:
     ENVIRONMENT = 'omega'
+else:
+    ENVIRONMENT = 'localhost'
 
 # 版本
 VERSION = '1.3'
