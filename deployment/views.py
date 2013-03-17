@@ -705,3 +705,47 @@ def save_file_from_online_editor(request, project_id = 0, server_idx_list = ''):
             pass
     
     return HttpResponse(json.dumps(params));
+
+@login_required
+def patch_group_list_page(request, page_num=1):
+    projects = Project.objects.all()
+    conditions = []
+    query_params = {}
+    num_per_page = 20
+    
+    if request.POST:
+        creator_name = request.POST.get('creatorName')
+        if creator_name:
+            query_params['creatorName'] = creator_name
+            conditions.append(Q(creator__username__icontains = creator_name))
+        proj_id = int(request.POST.get('project'))
+        if proj_id:
+            query_params['project'] = proj_id
+            conditions.append(Q(project__id = proj_id))
+        status = request.POST.get('status')
+        if status:
+            query_params['status'] = status
+            conditions.append(Q(status = status))
+        patch_group_name = request.POST.get('patchGroupName')
+        if patch_group_name:
+            query_params['patchGropuName'] = patch_group_name
+            conditions.append(Q(name = patch_group_name))
+    query_result = PatchGroup.objects.filter(*conditions).order_by('-id')
+    paged_result = Paginator(query_result, num_per_page);
+    patch_groups = paged_result.page(page_num)
+    for patch_group in patch_groups:
+        patch_group.formated_create_time = patch_group.create_time.strftime('%Y-%m-%d %H:%M:%S')
+        patch_group.formated_finish_time = patch_group.finish_time.strftime('%Y-%m-%d %H:%M:%S')
+    
+    query_params['curPage'] = page_num
+    query_params['numPerPage'] = num_per_page
+    query_params['totalPage'] = paged_result.num_pages
+    params = RequestContext(request, {
+        'projects': projects,
+        'page_groups': patch_groups,
+        'query_params': query_params,
+    })
+    return render_to_response('patch_group_list_page.html', params) 
+
+def patch_group_detail_page(request, id):
+    pass

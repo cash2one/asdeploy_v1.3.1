@@ -49,7 +49,7 @@ class DeployRecord(models.Model):
     deploy_item = models.ForeignKey(DeployItem, null = True)
     create_time = models.DateTimeField()
     status = models.CharField(max_length = 15)
-#    conflict_detail = models.ForeignKey('ConflictDetail', null = True)
+    conflict_detail = models.ForeignKey('ConflictDetail', null = True)
     
     class Meta:
         db_table = 'dpl_deployrecord'
@@ -82,8 +82,9 @@ class PatchGroup(models.Model):
     STATUS_STOP = "stop"
     
     creator = models.ForeignKey(User)
+    project = models.ForeignKey(Project)            # 目前只能是web
     name = models.CharField(max_length = 20)
-    check_code = models.CharField(max_length = 10) # 组内的补丁在目录名中必须包含相应的标识码
+    check_code = models.CharField(max_length = 10)  # 组内的补丁在目录名中必须包含相应的标识码
     status = models.CharField(max_length = 20)
     create_time = models.DateTimeField()
     finish_time = models.DateTimeField(null = True)

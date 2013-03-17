@@ -46,6 +46,10 @@ urlpatterns = patterns('',
     (r'^deployRecordList/(?P<page_num>\d+)/$', deploy_record_list_page),
     (r'^deployRecordDetail/(?P<record_id>\d+)/$', deploy_record_detail_page),
     
+    # 补丁组相关功能
+    (r'^patchGroupList/(?P<page_num>\d+)/$', patch_group_list_page),
+    (r'^patchGroupDetail/(?P<page_num>\d+)/$', patch_group_detail_page),
+    
     #检查硬盘挂载情况
     (r'^checkServerStatusForProject/(?P<project_name>[\w-]+)/$', check_server_status_for_project),
     
