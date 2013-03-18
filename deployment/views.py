@@ -735,17 +735,45 @@ def patch_group_list_page(request, page_num=1):
     patch_groups = paged_result.page(page_num)
     for patch_group in patch_groups:
         patch_group.formated_create_time = patch_group.create_time.strftime('%Y-%m-%d %H:%M:%S')
-        patch_group.formated_finish_time = patch_group.finish_time.strftime('%Y-%m-%d %H:%M:%S')
+        if patch_group.finish_time:
+            patch_group.formated_finish_time = patch_group.finish_time.strftime('%Y-%m-%d %H:%M:%S')
     
     query_params['curPage'] = page_num
     query_params['numPerPage'] = num_per_page
     query_params['totalPage'] = paged_result.num_pages
     params = RequestContext(request, {
         'projects': projects,
-        'page_groups': patch_groups,
+        'patch_groups': patch_groups,
         'query_params': query_params,
     })
     return render_to_response('patch_group_list_page.html', params) 
 
-def patch_group_detail_page(request, id):
+def patch_group_detail_page(request, patch_group_id):
     pass
+
+def save_or_update_patch_group(request, patch_group_id = 0):
+    patch_group_id = int(patch_group_id)
+    patch_group = PatchGroup()
+    if patch_group_id > 0:
+        print patch_group_id
+        patch_group = PatchGroup.objects.get(pk = patch_group_id)
+    if request.POST:
+        project_id = int(request.POST.get('project_id'))
+        project = Project.objects.get(pk = project_id)
+        patch_group = PatchGroup(
+            creator = request.user,
+            name = request.POST.get('name'),
+            check_code = request.POST.get('check_code'),
+            status = request.POST.get('status'),
+            project = project,
+            create_time = datetime.now(),
+        )
+        patch_group.save()
+        params = {
+            'isSuccess': True,
+        }
+        return HttpResponse(json.dumps(params))
+    params = RequestContext(request, {
+        'patch_group': patch_group,
+    })
+    return render_to_response('save_or_update_patch_group_page.html', params)

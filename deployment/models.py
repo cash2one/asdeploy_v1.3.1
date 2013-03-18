@@ -77,8 +77,9 @@ class PatchFile(models.Model):
         db_table = 'dpl_patch_file'
 
 class PatchGroup(models.Model):
+    STATUS_CREATED = 'created'
     STATUS_TEST = "test"
-    STATUS_FINISH = "finish"
+    STATUS_FINISH = "finish"                        # 通过上线后的更新发布，方可将状态置为finish
     STATUS_STOP = "stop"
     
     creator = models.ForeignKey(User)

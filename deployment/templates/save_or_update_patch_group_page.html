@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link style="text/css" rel="stylesheet" href="/static_files/css/style.css" />
+<style>
+body {
+	margin: 0px;
+	padding: 0px;
+	overflow: hidden;
+}
+.wrap {
+	width: 400px;
+	height: 250px;
+	margin: 0px auto 0px;
+}
+#edit_area td {
+	width: 275px;
+	text-align: left;
+}
+#edit_area td.label {
+	width: 125px;
+	text-align: right;
+}
+</style>
+<script type="text/javascript" src="/static_files/js/jquery.js"></script>
+<script type="text/javascript" src="/static_files/js/ajaxsetup_for_django.js"></script>
+<script>
+$(function(){
+	$('#submitBtn').on('click', function(){
+		var me = this;
+		var params = getPatchGroupParams();
+		if(!params){
+			return;
+		}
+		me.disabled = true;
+		$.post('.', params, function(data){
+			var result = null;
+			try{
+				result = $.parseJSON(data);
+			}catch(e) {
+			}
+			if(result.isSuccess === true){
+				alert('补丁组保存成功!');
+				opener.reloadPage();
+				window.close();
+			} else {
+				alert('补丁组保存失败!')
+			}
+			me.disabled = false;
+		})
+	});
+});
+function getPatchGroupParams(){
+	var nameRe = /\w+/,
+		checkCodeRe = /[a-zA-Z0-9]+/;
+	var name = $('#name').val(),
+		checkCode = $('#check_code').val(),
+		status = $('#status').val(),
+		projectId = $('#projectId').val();
+	if(!nameRe.test(name)){
+		alert('补丁组名称不合法!');
+		return null;
+	}
+	if(!checkCodeRe.test(checkCode)){
+		alert('标识码不合法！');
+		return null;
+	}
+	return {
+		name: name,
+		check_code: checkCode,
+		status: status,
+		project_id: projectId
+	};
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+	<h2 style="text-align: center;">
+		{% if not patch_group.id %}新增{% else %}修改{%endif%}补丁组
+	</h2>
+	<table id="edit_area">
+		{% if patch_group.id %}
+		<tr>
+			<td class="label">ID:</td>
+			<td>
+				<input type="hidden" id="id" name="id"/>
+				<input style="width: 200px;" disabled="disabled" value="{{patch_group.id}}"/>
+			</td>
+		</tr>
+		{% endif%}
+		<input type="hidden" id="projectId" name="projectId" value="1"/>
+		<tr>
+			<td class="label">补丁组名:</td>
+			<td>
+				<input name="name" id="name" style="width: 200px;" value="{{patch_group.name}}"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="label">标识码:</td>
+			<td>
+				<input name="check_code" id="check_code" style="width: 200px;" value="{{patch_group.check_code}}"/>
+			</td>
+			
+		</tr>
+		<tr>
+			<td class="label">状态:</td>
+			<td>
+				<select name="status" id="status" style="width: 100px; font-size: 16px;">
+					{% if not patch_group.id %}
+					<option value="created">创建</option>
+					{% endif %}
+					<option value="test">测试</option>
+					{% if patch_group.id %}
+					<option value="stop">停止</option>
+					{% endif %}
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" style="text-align: center;">
+				<input type="button" value=" 提交 " style="font-size:16px; margin-top: 15px;" id="submitBtn"/>
+			</td>
+		</tr>
+	</table>
+	
+</div>
+</body>
+</html>

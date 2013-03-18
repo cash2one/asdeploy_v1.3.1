@@ -48,7 +48,9 @@ urlpatterns = patterns('',
     
     # 补丁组相关功能
     (r'^patchGroupList/(?P<page_num>\d+)/$', patch_group_list_page),
-    (r'^patchGroupDetail/(?P<page_num>\d+)/$', patch_group_detail_page),
+    (r'^patchGroupDetail/(?P<patch_group_id>\d+)/$', patch_group_detail_page),
+    
+    (r'^saveOrUpdatePatchGroup/(?P<patch_group_id>\d+)/$', save_or_update_patch_group),
     
     #检查硬盘挂载情况
     (r'^checkServerStatusForProject/(?P<project_name>[\w-]+)/$', check_server_status_for_project),
