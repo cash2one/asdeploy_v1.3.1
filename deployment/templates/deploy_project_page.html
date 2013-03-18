@@ -33,7 +33,7 @@
 		margin: 0px;
 		padding: 0px;
 		display: inline-block;
-		width: 300px;
+		width: 600px;
 	}
 	div.upload_area .desc {
 		font-size: 20px;
@@ -534,7 +534,7 @@ function checkServerStatusForProject(projectName){
 	});
 }
 $(function(){
-	checkServerStatusForProject('{{project.name}}');
+	//checkServerStatusForProject('{{project.name}}');
 });
 </script>
 {% endblock %}
@@ -563,9 +563,16 @@ $(function(){
 				<li>发布工程: <b>{{project.name}}</b></li>
 				<li>版&nbsp;本&nbsp;号: <b>{{version}}</b></li>
 				<li>发布方式: <b>{{deployType}}</b></li>
+				<li>补丁分组: <b>
+					{% if patchGroup %}
+						{{patchGroup.name}} ({{patchGroup.check_code}})
+					{% else %}
+						无
+					{% endif %}</b>
+				</li>
 			</ul>
 			<br/>
-			<div class="upload_area" id="downloadProjectFileWrap">
+			<div class="upload_area" id="downloadProjectFileWrap" style="display:none;">
 				<br/>
 				<input type="button" value="下载工程文件" id="toggleDownloadProjectFileBtn"/>
 				<div id="downloadProjectFileArea" style="display:none; padding-top: 20px;">

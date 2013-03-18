@@ -98,17 +98,20 @@ def check_server_status_for_project(request, project_name = ''):
 def deploy_init_option_page(request):
     error_msg = None
     if request.POST:
-        proj_id_str = request.POST.get('projId')
         deploy_type = request.POST.get('deployType')
         version = request.POST.get('version')
+        proj_id = request.POST.get('projId') or 0
+        patch_group_id = request.POST.get('patchGroupId') or 0    #补丁组id
         cur_lock = _check_lock()
-        if not proj_id_str or not deploy_type or not version:
+        if not proj_id or not deploy_type or not version:
             error_msg = '输入参数有误'
         elif cur_lock:
             return HttpResponseRedirect('/')
         else:
-            proj_id = int(proj_id_str)
             project = Project.objects.get(pk = proj_id)
+            patch_group = patch_group_id \
+                and PatchGroup.objects.get(pk = patch_group_id) \
+                or None
             try:
                 cur_server = WEB_SERVER[project.name][0]
             except:
@@ -118,6 +121,7 @@ def deploy_init_option_page(request):
                 'deployType': deploy_type,
                 'version': version,
                 'curServer': cur_server,
+                'patchGroup': patch_group,
             }
             (record, lock) = _before_deploy_project(request, _params)
             _params['record'] = record
@@ -802,15 +806,9 @@ def save_or_update_patch_group(request, patch_group_id = 0):
 # 根据条件来获取补丁组
 @login_required
 def query_patch_groups(request):
-    conditions = []
     project_id = request.GET.get('project_id')
-    print project_id
-    if project_id:
-        conditions.append(Q(project__id = project_id))
     status = request.GET.get('status')
-    if status:
-        conditions.append(Q(status = status))
-    query_result = PatchGroup.objects.filter(*conditions).order_by('-id')
+    query_result = _query_patch_groups(project_id = project_id, status = status)
     patch_groups = [];
     for patch_group in query_result:
         patch_groups.append({
@@ -827,4 +825,14 @@ def query_patch_groups(request):
         'patchGroups': patch_groups,
     }
     return HttpResponse(json.dumps(params))
+
+def _query_patch_groups(project_id, status):
+    if project_id == 0:
+        return [0]
+    conditions = []
+    if project_id:
+        conditions.append(Q(project__id = project_id))
+    if status:
+        conditions.append(Q(status = status))
+    return PatchGroup.objects.filter(*conditions).order_by('-id')
     

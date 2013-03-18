@@ -78,9 +78,9 @@ class PatchFile(models.Model):
 
 class PatchGroup(models.Model):
     STATUS_CREATED = 'created'
-    STATUS_TEST = "testing"
-    STATUS_FINISH = "finished"                        # 通过上线后的更新发布，方可将状态置为finish
-    STATUS_STOP = "stoped"
+    STATUS_TESTING = "testing"
+    STATUS_FINISHED = "finished"                        # 通过上线后的更新发布，方可将状态置为finish
+    STATUS_STOPED = "stoped"
     
     creator = models.ForeignKey(User)
     project = models.ForeignKey(Project)            # 目前只能是web
