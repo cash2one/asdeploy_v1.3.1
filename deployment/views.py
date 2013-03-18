@@ -29,6 +29,9 @@ from deployment.deployimpl import *
 from deployment.sftpconn import *
 from deployment.serverchecker import check_server_status
 
+from django.utils import simplejson
+from django.core.serializers import serialize,deserialize
+
 
 def check_version_and_env(request):
     params = {
@@ -706,6 +709,10 @@ def save_file_from_online_editor(request, project_id = 0, server_idx_list = ''):
     
     return HttpResponse(json.dumps(params));
 
+###################
+###-补丁组相关功能-###
+###################
+
 @login_required
 def patch_group_list_page(request, page_num=1):
     projects = Project.objects.all()
@@ -759,7 +766,6 @@ def save_or_update_patch_group(request, patch_group_id = 0):
     patch_group = PatchGroup()
     has_authority = True
     if patch_group_id > 0:
-        print patch_group_id
         patch_group = PatchGroup.objects.get(pk = patch_group_id)
         ## 判断是否是本人或者管理员
         if patch_group.creator.id != request.user.id \
@@ -792,3 +798,33 @@ def save_or_update_patch_group(request, patch_group_id = 0):
         'has_authority': has_authority,
     })
     return render_to_response('save_or_update_patch_group_page.html', params)
+
+# 根据条件来获取补丁组
+@login_required
+def query_patch_groups(request):
+    conditions = []
+    project_id = request.GET.get('project_id')
+    print project_id
+    if project_id:
+        conditions.append(Q(project__id = project_id))
+    status = request.GET.get('status')
+    if status:
+        conditions.append(Q(status = status))
+    query_result = PatchGroup.objects.filter(*conditions).order_by('-id')
+    patch_groups = [];
+    for patch_group in query_result:
+        patch_groups.append({
+            'id': patch_group.id,
+            'name': patch_group.name,
+            'check_code': patch_group.check_code,
+            'project_id': patch_group.project.id,
+            'project_name': patch_group.project.name,
+            'creator_id': patch_group.creator.id,
+        })
+    params = {
+        'isSuccess': True,
+        'count': len(patch_groups),
+        'patchGroups': patch_groups,
+    }
+    return HttpResponse(json.dumps(params))
+    

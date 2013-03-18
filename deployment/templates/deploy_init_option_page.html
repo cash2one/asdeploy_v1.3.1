@@ -55,7 +55,11 @@ $(function(){
 		$liArr.css({backgroundColor: '', color: '', fontWeight: ''})
 			.filter(':nth-child(2n+1)').css({'backgroundColor': '#eee'});
 		var $this = $(this).css({backgroundColor: '#999', color: '#fff', fontWeight: 'bolder'});
-		$('#project').val($this.children('input:first').val());
+		var projectId = $this.children('input:first').val();
+		$('#project').val(projectId);
+		// 查看是否有补丁组
+		buildPatchGroupSel(projectId);
+		
 	});
 	$('#submitBtn').click(function(){
 		if(!submitCheck()){
@@ -63,7 +67,25 @@ $(function(){
 		}
 		$('#deployInitOptionForm').submit();
 	});
-})
+});
+function buildPatchGroupSel(projectId){
+	var $patchGroupSel = $('#patchGroupSel');
+	$patchGroupSel.parent().hide().end().children().remove();
+	$.getJSON('/queryPatchGroups/', {
+		project_id: projectId,
+		status: 'testing'
+	}, function(data){
+		if(data.isSuccess !== true || !data.count){
+			return;
+		}
+		$patchGroupSel.append('<option value="">请选择补丁组...</option>');
+		var patchGroups = data.patchGroups;
+		$.each(patchGroups, function(i, patchGroup){
+			$patchGroupSel.append('<option value="' + patchGroup.id + '">' + patchGroup.name + ':' + patchGroup.check_code + '</option>');
+		});
+		$patchGroupSel.parent().show();
+	});
+}
 function submitCheck(){
 	if(!$('#project').val()){
 		alert('请选择工程!');
@@ -75,6 +97,11 @@ function submitCheck(){
 	}
 	if(!/^\d+(\.\d+)+$/.test($('#version').val())){
 		alert('请输入正确的版本号!\n例如 "5.13"');
+		return false;
+	}
+	var $patchGroupSel = $('#patchGroupSel');
+	if($patchGroupSel.children().size() && !$patchGroupSel.val()){
+		alert('此工程发布需要选择补丁组!');
 		return false;
 	}
 	return true;
@@ -106,7 +133,7 @@ function submitCheck(){
 			<label>版本号:</label>
 			<input id="version" name="version" />
 		</div>
-		<div class="subwrap">
+		<div class="sub_wrap">
 			<label>要发布的工程</label>
 			<br/>
 			<div>
@@ -120,6 +147,9 @@ function submitCheck(){
 				</ul>
 			</div>
 			<br/>
+		</div>
+		<div class="sub_wrap" style="display:none; margin-top: -20px;">
+			<select id="patchGroupSel" style="width: 250px;"></select>
 		</div>
 		<input type="button" value="确定" id="submitBtn"/>
 	</form>
