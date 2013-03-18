@@ -751,29 +751,44 @@ def patch_group_list_page(request, page_num=1):
 def patch_group_detail_page(request, patch_group_id):
     pass
 
+# 虽然也有更新的功能，但是目前只使用其新增的功能
+# 更新会用更复杂的那个
+@login_required
 def save_or_update_patch_group(request, patch_group_id = 0):
     patch_group_id = int(patch_group_id)
     patch_group = PatchGroup()
+    has_authority = True
     if patch_group_id > 0:
         print patch_group_id
         patch_group = PatchGroup.objects.get(pk = patch_group_id)
+        ## 判断是否是本人或者管理员
+        if patch_group.creator.id != request.user.id \
+                and request.user.is_superuser:
+            has_authority = False
     if request.POST:
+        if not has_authority:
+            return HttpResponse(json.dumps({
+                'isSuccess': False
+            }))
         project_id = int(request.POST.get('project_id'))
         project = Project.objects.get(pk = project_id)
-        patch_group = PatchGroup(
-            creator = request.user,
-            name = request.POST.get('name'),
-            check_code = request.POST.get('check_code'),
-            status = request.POST.get('status'),
-            project = project,
-            create_time = datetime.now(),
-        )
+        if patch_group_id == 0:
+            patch_group = PatchGroup(
+                creator = request.user,
+                project = project,
+                create_time = datetime.now(),
+            )
+        patch_group.name = request.POST.get('name')
+        patch_group.check_code = request.POST.get('check_code')
+        patch_group.status = request.POST.get('status')
         patch_group.save()
         params = {
             'isSuccess': True,
         }
         return HttpResponse(json.dumps(params))
+    ## get的情形
     params = RequestContext(request, {
         'patch_group': patch_group,
+        'has_authority': has_authority,
     })
     return render_to_response('save_or_update_patch_group_page.html', params)

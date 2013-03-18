@@ -54,14 +54,14 @@ $(function(){
 	});
 });
 function getPatchGroupParams(){
-	var nameRe = /\w+/,
+	var nameRe = /.+/,
 		checkCodeRe = /[a-zA-Z0-9]+/;
 	var name = $('#name').val(),
 		checkCode = $('#check_code').val(),
 		status = $('#status').val(),
 		projectId = $('#projectId').val();
 	if(!nameRe.test(name)){
-		alert('补丁组名称不合法!');
+		alert('补丁组名称不能为空!');
 		return null;
 	}
 	if(!checkCodeRe.test(checkCode)){
