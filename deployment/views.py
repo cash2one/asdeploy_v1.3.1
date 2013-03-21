@@ -486,7 +486,7 @@ def _generate_conflict_detail_for_deploy_record(record = None, patch_group_id = 
     patch_file_list = related_file_list + _add_patch_file_to_group(patch_group, unrelated_file_list)
     
     patch_groups = _query_patch_groups(record.project.id, PatchGroup.STATUS_TESTING)
-    conflict_info_list = _check_conflict(patch_groups, patch_group, patch_file_list)
+    conflict_info_list = _check_conflict_of_patch_file(patch_groups, patch_group.id, patch_file_list)
     if len(conflict_info_list) > 0:
         conflict_detail = ConflictDetail(deploy_record = record)
         conflict_detail.save()
@@ -495,14 +495,30 @@ def _generate_conflict_detail_for_deploy_record(record = None, patch_group_id = 
         for conflict_info in conflict_info_list:
             conflict_info.save()
             conflict_detail.conflict_infos.add(conflict_info)
-    # todo
+            
+# 检查冲突(用于上传文件时提醒)
+# current_file_path_list
+def _check_conflict_of_file_path(patch_groups, current_patch_group_id, current_file_path_list):
+    conflict_file_path_list = []
+    for path in current_file_path_list:
+        for patch_group in patch_groups:
+            if patch_group.id == current_patch_group_id:
+                continue
+            for pf in patch_group.patch_files.all():
+                if pf.file_path == path:
+                    conflict_file_path_list.append({
+                        'file_path': path,
+                        'conflict_patch_group_name': patch_group.name
+                    })
+    return conflict_file_path_list
 
-# 检查冲突
-def _check_conflict(patch_groups, current_patch_group, current_patch_file_list):
+# 检查冲突 (用于发布时)
+# current_patch_file_list是PatchFile的数组
+def _check_conflict_of_patch_file(patch_groups, current_patch_group_id, current_patch_file_list):
     conflict_info_list = []
     for cpf in current_patch_file_list:
         for patch_group in patch_groups:
-            if patch_group.id == current_patch_group.id:
+            if patch_group.id == current_patch_group_id:
                 continue
             for pf in patch_group.patch_files.all():
                 if cpf.id == pf.id:
