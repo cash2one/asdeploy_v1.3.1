@@ -27,6 +27,7 @@ class DeployItem(models.Model):
     folder_path = models.CharField(max_length = 512, null = True)
     create_time = models.DateTimeField()
     update_time = models.DateTimeField(null = True)
+    patch_group = models.ForeignKey('PatchGroup')
     
     def __unicode__(self):
         return '[' + self.file_name + '|' + self.version + ']'

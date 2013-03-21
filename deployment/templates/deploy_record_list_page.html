@@ -33,6 +33,9 @@
 	#list_tbl {
 		width: 100%;
 	}
+	.conflict {
+		background-color: #f88;
+	}
 </style>
 {% endblock %}
 
@@ -198,7 +201,11 @@ $(function(){
 				<th>操作</th>
 			</tr>
 			{% for record in records %}
-			<tr>
+			<tr
+			{% if record.is_conflict_with_others %}
+				class="conflict"
+			{% endif %}
+			>
 				<td>{{record.id}}</td>
 				<td>{{record.user.username}}</td>
 				<td>{{record.formated_create_time}}</td>

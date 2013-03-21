@@ -244,12 +244,23 @@ def deploy_record_detail_page(request, record_id):
     elif item.deploy_type == DeployItem.WAR:
         readme = _get_readme_content(item.folder_path)
         file_list_content = item.file_name
+    
+    conflict_detail = None
+    if record.is_conflict_with_others:
+        conflict_details = ConflictDetail.objects.filter(deploy_record__id = record.id)
+        if len(conflict_details) > 0:
+            conflict_detail = conflict_details[0]
+    
+    print record.deploy_item.id
+    print record.deploy_item.patch_group.name
         
     params = RequestContext(request, {
         'record': record,
         'readme': readme,
-        'fileList': file_list_content,
+        'file_list_content': file_list_content,
+        'conflict_detail': conflict_detail,
     })
+    
     return render_to_response('deploy_record_detail_page.html', params)
 
 # 上传readme只限版本发布

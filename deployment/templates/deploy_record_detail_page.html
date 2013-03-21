@@ -35,6 +35,9 @@
 		<h3>发布类型: {{record.deploy_item.deploy_type}}</h3>
 		<h3>上传文件名: </h3>
 		<h3>{{record.deploy_item.file_name}}</h3>
+		{% if record.deploy_item.patch_group %}
+		<h3>所属补丁组：{{record.deploy_item.patch_group.name}}</h3>
+		{% endif%}
 	</div>
 	<div class="sect_wrap">
 		<div class="sect_title">
@@ -49,8 +52,36 @@
 			<label>发布文件列表</label>
 		</div>
 		<br/>
-		<textarea readonly="readonly" class="sect_content">{{fileList}}</textarea>
+		<textarea readonly="readonly" class="sect_content">{{file_list_content}}</textarea>
 	</div>
+	
+	{% if record.is_conflict_with_others and conflict_detail %}
+	<div class="sect_wrap">
+		<div class="sect_title" style="float:none; text-align: left; ">
+			<label>文件冲突详情</label>
+		</div>
+		<div>
+			<table id="conflict_tbl" border="1" cellspacing="0">
+				<tr>
+					<th width="40">ID</th>
+					<th width="350">文件名</th>
+					<th width="60">文件类型</th>
+					<th width="150">冲突组名</th>
+					<th width="80">冲突组状态</th>
+				</tr>
+				{% for conflict_info in conflict_detail.conflict_infos.all %}
+				<tr>
+					<td>{{conflict_info.id}}</td>
+					<td>{{conflict_info.conflict_patch_file.file_path}}</td>
+					<td>{{conflict_info.conflict_patch_file.file_type}}</td>
+					<td>{{conflict_info.conflict_patch_group.name}}</td>
+					<td>{{conflict_info.conflict_patch_group.status}}</td>
+				</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+	{% endif %}
 	
 	<div class="sect_wrap"  style="display:none;">
 		<div class="sect_title">
@@ -59,5 +90,6 @@
 		<br/>
 		<textarea readonly="readonly" class="sect_content"></textarea>
 	</div>
+
 </div>
 {% endblock %}
