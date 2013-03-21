@@ -342,9 +342,11 @@ def decompress_item(request):
                 os.system('rm -rf ' + unziped_folder)
             flag = 0 == os.system('unzip -o ' + item.folder_path + item.file_name + ' -d ' + item.folder_path)
         if flag:
+            file_list = _get_file_list(unziped_folder)
             params['isSuccess'] = True
             params['readme'] = _get_readme_content(unziped_folder)
-            params['fileList'] = _get_file_list(unziped_folder)
+            #params['fileList'] = _get_file_list(unziped_folder)
+            params['fileInfoList'] = None
                 
     if not params.has_key('isSuccess'):
         params['isSuccess'] = False
@@ -410,6 +412,7 @@ def start_deploy(request):
         record_id_str = request.POST.get('recordId')
         record = DeployRecord.objects.get(pk = int(record_id_str))
         server_group = request.POST.get('serverGroup')
+        patch_group_id = request.POST.get('patchGroupId') or 0
         
         # 版本发布需要web.xml
         if record.status == DeployRecord.PREPARE:
@@ -433,6 +436,117 @@ def start_deploy(request):
             'errorMsg': error_msg
         }
     return HttpResponse(json.dumps(params))
+
+# api for test
+def test_add_patch_file_to_group(request, patch_group_id):
+    file_list = [
+        'com.ablesky.migration.controller.account.LoginController.class',
+        'com.ablesky.migration.controller.organization.OrganizationRedirectController.class',
+        'com.ablesky.migration.controller.course.PostCourseOneController.class',
+    ]
+    patch_group = PatchGroup.objects.get(pk = patch_group_id)
+    unrelated_file_list, related_file_list = _distinguish_patch_file(patch_group, file_list)
+    print unrelated_file_list
+    print related_file_list
+    _add_patch_file_to_group(patch_group, file_list)
+    return HttpResponse('abc');
+
+def test_generate_conflict_detial_for_deploy_record(request):
+    record_id = 29
+    patch_group_id = 2;
+    record = DeployRecord.objects.get(pk = record_id)
+    patch_group = PatchGroup.objects.get(pk = patch_group_id)
+    _generate_conflict_detail_for_deploy_record(record, patch_group_id)
+    
+    return HttpResponse('abc');
+
+### 补丁组相关部分的代码 begin ###
+
+# 为每次发布的deploy_record生成相应的conflict_detail
+def _generate_conflict_detail_for_deploy_record(record = None, patch_group_id = 0):
+    if not record:
+        return;
+    patch_group = patch_group_id and PatchGroup.objects.get(pk = patch_group_id) or None
+    item = record.deploy_item
+    unziped_folder = item.folder_path + trim_compress_suffix(item.file_name) + '/'
+    file_list = _get_file_list(unziped_folder)
+    
+    unrelated_file_list, related_file_list = _distinguish_patch_file(patch_group, file_list)
+    patch_file_list = related_file_list + _add_patch_file_to_group(patch_group, unrelated_file_list)
+    
+    patch_groups = _query_patch_groups(record.project.id, PatchGroup.STATUS_TESTING)
+    conflict_info_list = _check_conflict(patch_groups, patch_group, patch_file_list)
+    if len(conflict_info_list) > 0:
+        conflict_detail = ConflictDetail(deploy_record = record)
+        conflict_detail.save()
+        record.is_conflict_with_others = True
+        record.save()
+        for conflict_info in conflict_info_list:
+            conflict_info.save()
+            conflict_detail.conflict_infos.add(conflict_info)
+    # todo
+
+# 检查冲突
+def _check_conflict(patch_groups, current_patch_group, current_patch_file_list):
+    conflict_info_list = []
+    for cpf in current_patch_file_list:
+        for patch_group in patch_groups:
+            if patch_group.id == current_patch_group.id:
+                continue
+            for pf in patch_group.patch_files.all():
+                if cpf.id == pf.id:
+                    conflict_info_list.append(ConflictInfo(
+                        conflict_patch_group = patch_group,
+                        conflict_patch_file = cpf
+                    ))
+    return conflict_info_list
+
+# 区分已关联的file和未关联的file
+# unrelated_file_list是路径数组
+# related_file_list是PatchFile数组
+def _distinguish_patch_file(patch_group, file_list):
+    related_file_list = []
+    unrelated_file_list = []
+    for filepath in file_list:
+        flag = True
+        for related_patch_file in patch_group.patch_files.all():
+            if filepath == related_patch_file.file_path:
+                flag = False
+                break
+        if flag:
+            unrelated_file_list.append(filepath)
+        else:
+            related_file_list.append(related_patch_file)
+    return unrelated_file_list, related_file_list
+
+# 为PatchGroup添加PatchFile信息        
+# 只能输入未关联的文件路径
+def _add_patch_file_to_group(patch_group, file_list):
+    if not file_list:
+        return []
+    patch_file_list = []
+    for file_path in file_list:
+        files = PatchFile.objects.filter(file_path = file_path)
+        patch_file = len(files) and files[0] or None
+        if not patch_file:
+            patch_file = PatchFile(file_path = file_path, file_type = _judge_patch_file_type(file_path))
+            patch_file.save();
+        patch_file_list.append(patch_file)
+        
+        rel = PatchFileRelGroup(
+            patch_group = patch_group,
+            patch_file = patch_file,
+            create_time = datetime.now(),
+        )
+        rel.save()
+    return patch_file_list
+    
+
+def _judge_patch_file_type(file_path):
+    return PatchFile.TYPE_DYNAMIC
+        
+### 补丁组功能相关代码 end ###
+
 
 @login_required
 def read_deploy_log_on_realtime(request):
@@ -827,12 +941,10 @@ def query_patch_groups(request):
     return HttpResponse(json.dumps(params))
 
 def _query_patch_groups(project_id, status):
-    if project_id == 0:
-        return [0]
     conditions = []
-    if project_id:
+    if project_id is not None:
         conditions.append(Q(project__id = project_id))
-    if status:
+    if status is not None:
         conditions.append(Q(status = status))
     return PatchGroup.objects.filter(*conditions).order_by('-id')
     

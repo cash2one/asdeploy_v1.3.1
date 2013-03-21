@@ -49,7 +49,7 @@ class DeployRecord(models.Model):
     deploy_item = models.ForeignKey(DeployItem, null = True)
     create_time = models.DateTimeField()
     status = models.CharField(max_length = 15)
-    conflict_detail = models.ForeignKey('ConflictDetail', null = True)
+    is_conflict_with_others = models.BooleanField(default = False)
     
     class Meta:
         db_table = 'dpl_deployrecord'
@@ -114,6 +114,7 @@ class ConflictInfo(models.Model):
 
 # DeployRecord与ConflictDetail之间1对0或1
 class ConflictDetail(models.Model):
+    deploy_record = models.ForeignKey(DeployRecord)
     conflict_infos = models.ManyToManyField(ConflictInfo)
     is_only_excluded_conflict = models.BooleanField(default = False) # 是否全是与例外文件之间的冲突
     
