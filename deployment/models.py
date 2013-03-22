@@ -107,6 +107,7 @@ class PatchFileRelGroup(models.Model):
         db_table = 'dpl_patch_file_rel_group'
         
 class ConflictInfo(models.Model):
+    related_patch_group_id = models.IntegerField()
     conflict_patch_group = models.ForeignKey(PatchGroup)
     conflict_patch_file = models.ForeignKey(PatchFile)
     is_excluded_conflict = models.BooleanField(default = False) # 是否是与例外文件之间的冲突

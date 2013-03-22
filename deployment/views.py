@@ -449,7 +449,7 @@ def start_deploy(request):
             record.status = DeployRecord.DEPLOYING
             record.save()
             # 如果是补丁，则要生成冲突信息
-            if record.item.deploy_type == DeployItem.PATCH:
+            if record.deploy_item.deploy_type == DeployItem.PATCH:
                 _generate_conflict_detail_for_deploy_record(record, patch_group_id)
             params = {
                 'beginDeploy': True,
@@ -541,6 +541,7 @@ def _check_conflict_of_patch_file(patch_groups, current_patch_group_id, current_
             for pf in patch_group.patch_files.all():
                 if cpf.id == pf.id:
                     conflict_info_list.append(ConflictInfo(
+                        related_patch_group_id = current_patch_group_id,
                         conflict_patch_group = patch_group,
                         conflict_patch_file = cpf
                     ))
@@ -919,7 +920,21 @@ def patch_group_list_page(request, page_num=1):
     return render_to_response('patch_group_list_page.html', params) 
 
 def patch_group_detail_page(request, patch_group_id):
-    pass
+    patch_group = PatchGroup.objects.get(pk = patch_group_id)
+    patch_group.formated_create_time = patch_group.create_time \
+        and patch_group.create_time.strftime('%Y-%m-%d %H:%M:%S') \
+        or None
+    patch_group.formated_finish_time = patch_group.finish_time \
+        and patch_group.finish_time.strftime('%Y-%m-%d %H:%M:%S') \
+        or None
+    
+    # 还要查询冲突信息
+    # TODO
+    
+    params = RequestContext(request, {
+        'patch_group': patch_group
+    })
+    return render_to_response('patch_group_detail_page.html', params)
 
 # 虽然也有更新的功能，但是目前只使用其新增的功能
 # 更新会用更复杂的那个
