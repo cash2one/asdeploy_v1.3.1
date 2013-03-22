@@ -27,6 +27,25 @@
 	
 </style>
 {% endblock %}
+{% block native_js %}
+<script>
+$(function(){
+	highlightConflict();
+});
+
+function highlightConflict(){
+	var conflictDict = {}
+	$('#conflictTbl').children('tbody').find('tr td:nth-child(1)').each(function(i, v){
+		conflictDict[v.innerHTML] = true;
+	});
+	$('#fileListTbl').children('tbody').find('tr td:nth-child(1)').each(function(i, v){
+		if(conflictDict[v.innerHTML]){
+			v.style.backgroundColor = '#f88';
+		}
+	})
+}
+</script>
+{% endblock %}
 {% block content %}
 <div class="wrap">
 	<h2>发布详情</h2>
@@ -52,7 +71,21 @@
 			<label>发布文件列表</label>
 		</div>
 		<br/>
-		<textarea readonly="readonly" class="sect_content">{{file_list_content}}</textarea>
+		<!--textarea readonly="readonly" class="sect_content">{{file_list_content}}</textarea -->
+		<div style="padding-top: 20px;" id="fileListWrap">
+			<table id="fileListTbl" border="1" cellspacing="0" style="width: 750px; text-align: left">
+				<thead>
+					<tr><th>文件路径</th></tr>
+				</thead>
+				<tbody>
+				{% for file_path in file_list %}
+					<tr>
+						<td>{{file_path}}</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
 	</div>
 	
 	{% if record.is_conflict_with_others and conflict_detail %}
@@ -61,23 +94,25 @@
 			<label>文件冲突详情</label>
 		</div>
 		<div>
-			<table id="conflict_tbl" border="1" cellspacing="0">
-				<tr>
-					<th width="40">ID</th>
-					<th width="350">文件名</th>
-					<th width="60">文件类型</th>
-					<th width="150">冲突组名</th>
-					<th width="80">冲突组状态</th>
-				</tr>
+			<table id="conflictTbl" border="1" cellspacing="0">
+				<thead>
+					<tr>
+						<th width="380">文件名</th>
+						<th width="60">类型</th>
+						<th width="150">冲突组名</th>
+						<th width="90">组状态</th>
+					</tr>
+				</thead>
+				<tbody>
 				{% for conflict_info in conflict_detail.conflict_infos.all %}
-				<tr>
-					<td>{{conflict_info.id}}</td>
-					<td>{{conflict_info.conflict_patch_file.file_path}}</td>
-					<td>{{conflict_info.conflict_patch_file.file_type}}</td>
-					<td>{{conflict_info.conflict_patch_group.name}}</td>
-					<td>{{conflict_info.conflict_patch_group.status}}</td>
-				</tr>
+					<tr>
+						<td style="text-align: left;">{{conflict_info.conflict_patch_file.file_path}}</td>
+						<td>{{conflict_info.conflict_patch_file.file_type}}</td>
+						<td>{{conflict_info.conflict_patch_group.name}}</td>
+						<td>{{conflict_info.conflict_patch_group.status}}</td>
+					</tr>
 				{% endfor %}
+				</tbody>
 			</table>
 		</div>
 	</div>

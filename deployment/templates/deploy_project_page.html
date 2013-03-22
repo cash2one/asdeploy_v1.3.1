@@ -276,6 +276,7 @@ $(function(){
 			recordId: '{{record.id}}',
 			deployType: '{{deployType}}',
 			serverGroup: $('#serverGroupSel').val(),
+			patchGroupId: '{{patchGroupId}}'
 		}, function(data){
 			var result = null;
 			try{
@@ -648,14 +649,15 @@ $(function(){
 				<div style="padding-top: 20px;" id="fileListWrap">
 					<label>文件列表</label>
 					<br/>
-					<!-- textarea已废弃 -->
-					<textarea id="fileListContent" readonly="readonly" style="height:400px; display:none"></textarea>
 					<table id="fileListTbl" border="1" cellspacing="0" style="width: 800px;">
+						<thead>
+							<tr><td>文件路径</td></tr>
+						</thead>
 						<tbody>
 						</tbody>
 					</table>
 				</div>
-				<div style="padding-top: 20px;" id="conflict_file_info_list">
+				<div style="padding-top: 20px;" id="conflict_file_info_list" >
 					<label>冲突详情</label>
 					<table id="conflictFileInfoTbl" border="1" cellspacing="0">
 						<thead>

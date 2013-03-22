@@ -237,29 +237,28 @@ def deploy_record_detail_page(request, record_id):
     record = DeployRecord.objects.get(pk = record_id)
     item = record.deploy_item
     readme = ''
-    file_list_content = ''
+    #file_list_content = ''
     if item.deploy_type == DeployItem.PATCH:
         folder_path = item.folder_path + trim_compress_suffix(item.file_name) + '/'
         readme = _get_readme_content(folder_path)
         file_list = _get_file_list(folder_path)
-        file_list_content = '\r\n'.join(file_list)
+        #file_list_content = '\r\n'.join(file_list)
     elif item.deploy_type == DeployItem.WAR:
         readme = _get_readme_content(item.folder_path)
-        file_list_content = item.file_name
+        #file_list_content = item.file_name
+        file_list = [item.file_name]
     
     conflict_detail = None
     if record.is_conflict_with_others:
         conflict_details = ConflictDetail.objects.filter(deploy_record__id = record.id)
         if len(conflict_details) > 0:
             conflict_detail = conflict_details[0]
-    
-    print record.deploy_item.id
-    print record.deploy_item.patch_group.name
         
     params = RequestContext(request, {
         'record': record,
         'readme': readme,
-        'file_list_content': file_list_content,
+        #'file_list_content': file_list_content,
+        'file_list': file_list,
         'conflict_detail': conflict_detail,
     })
     
@@ -434,7 +433,7 @@ def start_deploy(request):
         record_id_str = request.POST.get('recordId')
         record = DeployRecord.objects.get(pk = int(record_id_str))
         server_group = request.POST.get('serverGroup')
-        patch_group_id = request.POST.get('patchGroupId') or 0
+        patch_group_id = int(request.POST.get('patchGroupId') or 0)
         
         # 版本发布需要web.xml
         if record.status == DeployRecord.PREPARE:
@@ -449,6 +448,7 @@ def start_deploy(request):
             deployer.start()
             record.status = DeployRecord.DEPLOYING
             record.save()
+            _generate_conflict_detail_for_deploy_record(record, patch_group_id)
             params = {
                 'beginDeploy': True,
             }
@@ -485,11 +485,16 @@ def test_generate_conflict_detial_for_deploy_record(request):
 ### 补丁组相关部分的代码 begin ###
 
 # 为每次发布的deploy_record生成相应的conflict_detail
+# record: 当前的发布记录
+# patch_group_id: 当前发布记录所对应的补丁组
 def _generate_conflict_detail_for_deploy_record(record = None, patch_group_id = 0):
     if not record:
         return;
     patch_group = patch_group_id and PatchGroup.objects.get(pk = patch_group_id) or None
     item = record.deploy_item
+    if patch_group:
+        item.patch_group = patch_group
+        item.save()
     unziped_folder = item.folder_path + trim_compress_suffix(item.file_name) + '/'
     file_list = _get_file_list(unziped_folder)
     
