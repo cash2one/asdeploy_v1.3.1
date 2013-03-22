@@ -32,6 +32,7 @@ from deployment.serverchecker import check_server_status
 from django.utils import simplejson
 from django.core.serializers import serialize,deserialize
 
+import pdb
 
 def check_version_and_env(request):
     params = {
@@ -122,6 +123,7 @@ def deploy_init_option_page(request):
                 'version': version,
                 'curServer': cur_server,
                 'patchGroup': patch_group,
+                'patchGroupId': patch_group_id,
             }
             (record, lock) = _before_deploy_project(request, _params)
             _params['record'] = record
@@ -343,8 +345,9 @@ def upload_deploy_item(request):
 def decompress_item(request):
     params = {}
     if request.POST and request.POST.get('recordId'):
-        record_id_str = request.POST.get('recordId')
-        record = DeployRecord.objects.get(pk = int(record_id_str))
+        record_id = request.POST.get('recordId')
+        patch_group_id = int(request.POST.get('patchGroupId') or 0)
+        record = DeployRecord.objects.get(pk = record_id)
         item = record.deploy_item
         flag = False
         if item and item.file_name.endswith('.zip'):
@@ -356,8 +359,16 @@ def decompress_item(request):
             file_list = _get_file_list(unziped_folder)
             params['isSuccess'] = True
             params['readme'] = _get_readme_content(unziped_folder)
-            #params['fileList'] = _get_file_list(unziped_folder)
-            params['fileInfoList'] = None
+            params['fileList'] = file_list
+        
+        # 如果当前工程有配置关联的补丁组，则进行冲突检查
+        # patch_group = patch_group_id > 0 and PatchGroup.objects.get(pk = patch_group_id) or None
+        patch_groups = _query_patch_groups(record.project.id, PatchGroup.STATUS_TESTING)
+        if patch_groups and len(patch_groups) > 0:
+            # 这个数组里面不是ConflictInfo的实例，而是{file_path, conflict_patch_group_name}
+            conflict_file_info_list = _check_conflict_of_file_path(patch_groups, patch_group_id, file_list)
+            params['conflict_file_info_list'] = conflict_file_info_list
+            
                 
     if not params.has_key('isSuccess'):
         params['isSuccess'] = False

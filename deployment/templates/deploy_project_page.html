@@ -228,8 +228,10 @@ $(function(){
 	}
 	$('#decompressBtn').click(function(){
 		$('#decompressBtn').val('解压中').attr({disabled:true});
+		
 		$.post('/decompressItem/', {
-			recordId: '{{record.id}}'
+			recordId: '{{record.id}}',
+			patchGroupId: '{{patchGroupId}}'
 		}, function(data){
 			$('#decompressBtn').val('解压补丁文件').attr({disabled:false});
 			var result = null;
@@ -241,8 +243,26 @@ $(function(){
 				if(result.readme){
 					$('#readmeContent').val(result.readme);
 				}
-				if(result.fileList instanceof Array){
+				$fileListTblBody = $('#fileListTbl').children('tbody');
+				$fileListTblBody.children().remove();
+				if($.isArray(result.fileList)){
 					$('#fileListContent').val(result.fileList.join('\r\n'));
+					for(var i=0, l=result.fileList.length; i<l; i++){
+						$fileListTblBody.append('<tr><td>' + result.fileList[i] + '</td></tr>')
+					}
+				}
+				
+				var $conflict_tbl = $('#conflictFileInfoTbl');
+				var $conflict_tbody = $conflict_tbl.children('tbody').children().remove().end();
+				var conflict_file_info_list = result.conflict_file_info_list;
+				if($.isArray(conflict_file_info_list)){
+					for(var i=0, l=conflict_file_info_list.length; i<l; i++){
+						$conflict_tbody.append(
+							$('<tr>').append('<td>' + conflict_file_info_list[i].file_path + '</td>')
+								.append('<td>' + conflict_file_info_list[i].conflict_patch_group_name + '</td>')
+						);
+					}
+					
 				}
 				alert('解压缩成功!');
 			}else{
@@ -628,7 +648,25 @@ $(function(){
 				<div style="padding-top: 20px;" id="fileListWrap">
 					<label>文件列表</label>
 					<br/>
-					<textarea id="fileListContent" readonly="readonly"></textarea>
+					<!-- textarea已废弃 -->
+					<textarea id="fileListContent" readonly="readonly" style="height:400px; display:none"></textarea>
+					<table id="fileListTbl" border="1" cellspacing="0" style="width: 800px;">
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+				<div style="padding-top: 20px;" id="conflict_file_info_list">
+					<label>冲突详情</label>
+					<table id="conflictFileInfoTbl" border="1" cellspacing="0">
+						<thead>
+							<tr>
+								<th width="600">文件路径</th>
+								<th width="200">冲突补丁组</th>
+							</tr>
+						</thead>
+						<tbody style="background-color: #f88;">
+						</tbody>
+					</table>
 				</div>
 				<div style="padding-top: 20px;">
 					<input type="button" value="发布" id="startDeployBtn" _disabled="disabled"/>
