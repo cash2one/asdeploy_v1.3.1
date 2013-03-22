@@ -225,6 +225,7 @@ $(function(){
 	if('{{deployType}}' == 'war'){
 		$('#decompressBtn').attr({disabled: true}).css({display: 'none'});
 		$('#fileListWrap').css({display: 'none'});
+		$('#conflict_file_info_list').css({display: 'none'});
 	}
 	$('#decompressBtn').click(function(){
 		$('#decompressBtn').val('解压中').attr({disabled:true});

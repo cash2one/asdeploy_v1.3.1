@@ -58,8 +58,19 @@ $(function(){
 		var projectId = $this.children('input:first').val();
 		$('#project').val(projectId);
 		// 查看是否有补丁组
-		buildPatchGroupSel(projectId);
+		if($('#deployType').val() == 'patch') {
+			buildPatchGroupSel(projectId);
+		}
 		
+	});
+	$('#deployType').change(function(){
+		var projectId = $('#project').val();
+		if(!projectId || this.value != 'patch'){
+			$('#patchGroupSel').parent().hide().end().val('')
+			return;
+		} else {
+			buildPatchGroupSel($('#project').val());
+		}
 	});
 	$('#submitBtn').click(function(){
 		if(!submitCheck()){
@@ -91,7 +102,8 @@ function submitCheck(){
 		alert('请选择工程!');
 		return false;
 	}
-	if(!$('#deployType').val()){
+	var $deployType = $('#deployType');
+	if(!$deployType.val()){
 		alert('请选择发布类型!');
 		return false;
 	}
@@ -100,7 +112,9 @@ function submitCheck(){
 		return false;
 	}
 	var $patchGroupSel = $('#patchGroupSel');
-	if($patchGroupSel.children().size() && !$patchGroupSel.val()){
+	if($deployType.val() == 'patch' 
+			&& $patchGroupSel.children().size() 
+			&& !$patchGroupSel.val()){
 		alert('此工程发布需要选择补丁组!');
 		return false;
 	}
