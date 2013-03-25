@@ -20,6 +20,7 @@ from django.contrib.auth import logout, authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.core.servers.basehttp import FileWrapper
+from django.db import connection
 
 from deployment.deploysetting import *
 from deployment.models import *
@@ -462,6 +463,36 @@ def start_deploy(request):
     return HttpResponse(json.dumps(params))
 
 # api for test
+    
+def test_raw_sql(request):
+    patch_group_conflict_file_list = []
+    related_patch_group_id = 1;
+    sql = """
+        SELECT 
+            distinct ci.conflict_patch_group_id, 
+            pg.name AS conflict_patch_group_name,
+            ci.conflict_patch_file_id,
+            pf.file_path AS conflict_patch_file_path
+        FROM dpl_conflict_info AS ci,  
+            dpl_patch_group AS pg,
+            dpl_patch_file AS pf
+        WHERE ci.related_patch_group_id = %d
+            AND ci.conflict_patch_group_id = pg.id
+            AND ci.conflict_patch_file_id = pf.id
+            AND pg.status = 'testing'
+    """ % (related_patch_group_id)
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    for row in cursor.fetchall():
+        patch_group_conflict_file_list.append({
+            'conflict_patch_group_id': row[0],
+            'conflict_patch_group_name': row[1],
+            'conflict_patch_file_id': row[2],
+            'conflict_patch_file_patch': row[3],
+        })
+    print patch_group_conflict_file_list
+    return HttpResponse('abc');
+
 def test_add_patch_file_to_group(request, patch_group_id):
     file_list = [
         'com.ablesky.migration.controller.account.LoginController.class',
@@ -929,12 +960,44 @@ def patch_group_detail_page(request, patch_group_id):
         or None
     
     # 还要查询冲突信息
-    # TODO
+    patch_group_conflict_file_list = _find_patch_group_conflict_file_list(patch_group.id)
     
     params = RequestContext(request, {
-        'patch_group': patch_group
+        'patch_group': patch_group,
+        'patch_group_conflict_file_list': patch_group_conflict_file_list,
     })
     return render_to_response('patch_group_detail_page.html', params)
+
+
+
+def _find_patch_group_conflict_file_list(related_patch_group_id = 0):
+    patch_group_conflict_file_list = []
+    sql = """
+        SELECT 
+            distinct ci.conflict_patch_group_id, 
+            pg.name AS conflict_patch_group_name,
+            ci.conflict_patch_file_id,
+            pf.file_path AS conflict_patch_file_path,
+            pf.file_type AS conflict_patch_file_type
+        FROM dpl_conflict_info AS ci,  
+            dpl_patch_group AS pg,
+            dpl_patch_file AS pf
+        WHERE ci.related_patch_group_id = %d
+            AND ci.conflict_patch_group_id = pg.id
+            AND ci.conflict_patch_file_id = pf.id
+            AND pg.status = 'testing'
+    """ % (related_patch_group_id)
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    for row in cursor.fetchall():
+        patch_group_conflict_file_list.append({
+            'conflict_patch_group_id': row[0],
+            'conflict_patch_group_name': row[1],
+            'conflict_patch_file_id': row[2],
+            'conflict_patch_file_path': row[3],
+            'conflict_patch_file_type': row[4],
+        })
+    return patch_group_conflict_file_list
 
 # 虽然也有更新的功能，但是目前只使用其新增的功能
 # 更新会用更复杂的那个

@@ -68,5 +68,6 @@ urlpatterns = patterns('',
     
     #api for test
     (r'testAddPatchFileToGroup/(?P<patch_group_id>\d+)/$', test_add_patch_file_to_group),
-    (r'testGenerateConflictDetailForDeployRecord/$', test_generate_conflict_detial_for_deploy_record)
+    (r'testGenerateConflictDetailForDeployRecord/$', test_generate_conflict_detial_for_deploy_record),
+    (r'testRawSql/$', test_raw_sql),
 )
