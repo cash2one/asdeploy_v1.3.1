@@ -256,15 +256,21 @@ $(function(){
 				var $conflict_tbl = $('#conflictFileInfoTbl');
 				var $conflict_tbody = $conflict_tbl.children('tbody').children().remove().end();
 				var conflict_file_info_list = result.conflict_file_info_list;
+				var conflict_dict = {};
 				if($.isArray(conflict_file_info_list)){
 					for(var i=0, l=conflict_file_info_list.length; i<l; i++){
 						$conflict_tbody.append(
 							$('<tr>').append('<td>' + conflict_file_info_list[i].file_path + '</td>')
 								.append('<td>' + conflict_file_info_list[i].conflict_patch_group_name + '</td>')
 						);
+						conflict_dict[conflict_file_info_list[i].file_path] = true
 					}
-					
 				}
+				$fileListTblBody.find('tr td:nth-child(1)').each(function(i, v){
+					if(conflict_dict[v.innerHTML] === true) {
+						v.style.backgroundColor = '#f88';
+					}
+				});
 				alert('解压缩成功!');
 			}else{
 				alert('解压缩失败!')
@@ -652,7 +658,7 @@ $(function(){
 					<br/>
 					<table id="fileListTbl" border="1" cellspacing="0" style="width: 800px;">
 						<thead>
-							<tr><td>文件路径</td></tr>
+							<tr><th>文件路径</th></tr>
 						</thead>
 						<tbody>
 						</tbody>
@@ -667,7 +673,7 @@ $(function(){
 								<th width="200">冲突补丁组</th>
 							</tr>
 						</thead>
-						<tbody style="background-color: #f88;">
+						<tbody>
 						</tbody>
 					</table>
 				</div>
