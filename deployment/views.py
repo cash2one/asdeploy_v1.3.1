@@ -1034,7 +1034,7 @@ def save_or_update_patch_group(request, patch_group_id = 0):
         patch_group = PatchGroup.objects.get(pk = patch_group_id)
         ## 判断是否是本人或者管理员
         if patch_group.creator.id != request.user.id \
-                and request.user.is_superuser:
+                and not request.user.is_superuser:
             has_authority = False
     if request.POST:
         if not has_authority:

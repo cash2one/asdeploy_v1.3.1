@@ -99,7 +99,7 @@ function highlightConflict(){
 				{% for conflict_file_info in patch_group_conflict_file_list %}
 					<tr>
 						<td style="text-align: left;">
-							<input style="width: 475px; height: 100%;" readOnly="true" value="{{conflict_file_info.conflict_patch_file_path}}" />
+							<input style="width: 475px; height: 100%; border: 0px;" readOnly="true" value="{{conflict_file_info.conflict_patch_file_path}}" />
 						</td>
 						<td>{{conflict_file_info.conflict_patch_file_type}}</td>
 						<td>{{conflict_file_info.conflict_patch_group_name}}</td>

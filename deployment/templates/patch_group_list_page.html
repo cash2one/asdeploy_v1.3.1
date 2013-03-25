@@ -182,6 +182,9 @@ function reloadPage(){
 				<td>{{patch_group.status}}</td>
 				<td>
 					<a href="/patchGroupDetail/{{patch_group.id}}/">详情</a>
+					{% if user.id == patch_group.creator.id or user.is_superuser %}
+					<a href="javascript:openSaveOrUpdatePatchGroupWindow({patchGroupId: '{{patch_group.id}}'});">修改</a>
+					{% endif %}
 				</td>
 			</tr>
 			{% endfor %}
