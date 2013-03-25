@@ -530,6 +530,7 @@ def _generate_conflict_detail_for_deploy_record(record = None, patch_group_id = 
         item.save()
     unziped_folder = item.folder_path + trim_compress_suffix(item.file_name) + '/'
     file_list = _get_file_list(unziped_folder)
+    file_list = _exclude_readme_from_file_list(file_list)
     
     unrelated_file_list, related_file_list = _distinguish_patch_file(patch_group, file_list)
     patch_file_list = related_file_list + _add_patch_file_to_group(patch_group, unrelated_file_list)
@@ -544,6 +545,18 @@ def _generate_conflict_detail_for_deploy_record(record = None, patch_group_id = 
         for conflict_info in conflict_info_list:
             conflict_info.save()
             conflict_detail.conflict_infos.add(conflict_info)
+
+# file_list是文件路径的字符串数组
+def _exclude_readme_from_file_list(file_list):
+    new_file_list = []
+    for file_path in file_list:
+        if not file_path:
+            continue
+        if file_path.lower() == 'readme.txt':
+            continue
+        new_file_list.append(file_path)
+    return new_file_list
+    
             
 # 检查冲突(用于上传文件时提醒)
 # current_file_path_list
