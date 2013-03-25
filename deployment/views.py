@@ -620,7 +620,18 @@ def _add_patch_file_to_group(patch_group, file_list):
     
 
 def _judge_patch_file_type(file_path):
-    return PatchFile.TYPE_DYNAMIC
+    if not file_path:
+        return PatchFile.TYPE_DYNAMIC
+    ridx = file_path.rfind('.')
+    if ridx < 0:
+        return PatchFile.TYPE_DYNAMIC
+    # 以上都是异常情形，默认返回dynamic
+    # dynamic对应tomcat，static对应静态服务器
+    suffix = file_path[ridx + 1: None]
+    if suffix in ['class', 'xml', 'jsp', 'properties']:
+        return PatchFile.TYPE_DYNAMIC
+    else:
+        return PatchFile.TYPE_STATIC
         
 ### 补丁组功能相关代码 end ###
 
