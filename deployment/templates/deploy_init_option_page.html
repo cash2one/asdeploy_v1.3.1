@@ -92,7 +92,7 @@ function buildPatchGroupSel(projectId){
 		$patchGroupSel.append('<option value="">请选择补丁组...</option>');
 		var patchGroups = data.patchGroups;
 		$.each(patchGroups, function(i, patchGroup){
-			$patchGroupSel.append('<option value="' + patchGroup.id + '">' + patchGroup.name + ':' + patchGroup.check_code + '</option>');
+			$patchGroupSel.append('<option value="' + patchGroup.id + '">' + patchGroup.name + ' -- ' + patchGroup.check_code + '</option>');
 		});
 		$patchGroupSel.parent().show();
 	});

@@ -35,8 +35,8 @@ $(function(){
 
 function highlightConflict(){
 	var conflictDict = {}
-	$('#conflictTbl').children('tbody').find('tr td:nth-child(1)').each(function(i, v){
-		conflictDict[v.innerHTML] = true;
+	$('#conflictTbl').children('tbody').find('tr td:nth-child(1) input').each(function(i, v){
+		conflictDict[v.value] = true;
 	});
 	$('#fileListTbl').children('tbody').find('tr td:nth-child(1)').each(function(i, v){
 		if(conflictDict[v.innerHTML]){
@@ -98,7 +98,9 @@ function highlightConflict(){
 				<tbody>
 				{% for conflict_file_info in patch_group_conflict_file_list %}
 					<tr>
-						<td style="text-align: left;">{{conflict_file_info.conflict_patch_file_path}}</td>
+						<td style="text-align: left;">
+							<input style="width: 475px; height: 100%;" readOnly="true" value="{{conflict_file_info.conflict_patch_file_path}}" />
+						</td>
 						<td>{{conflict_file_info.conflict_patch_file_type}}</td>
 						<td>{{conflict_file_info.conflict_patch_group_name}}</td>
 						<td>testing</td>
