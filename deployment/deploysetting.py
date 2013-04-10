@@ -1,6 +1,7 @@
 #coding:utf-8
 
 import os
+import re
 
 def get_hostname():
     syst = os.name
@@ -16,7 +17,18 @@ def get_hostname():
     else:
         return 'Unknown Hostname'
 
+def get_lan_ip_address():
+    lan_info = os.popen("ifconfig").read()
+    ip_re = re.compile(r'inet.*?\:(192.168(?:\.\d{1,3}){2})')
+    m = ip_re.search(lan_info)
+    if not m or not len(m.groups()):
+        return ''
+    return m.groups()[0]
+
+# 主机名称
 HOSTNAME = get_hostname()
+# 局域网IP
+LANIP = get_lan_ip_address()
 
 # 环境参数(重要) 依靠hostname来自动判断
 # 点击logo，可弹出此文件配置的真实的环境信息。
@@ -102,6 +114,8 @@ WEB_SERVERS = {
 
 WEB_SERVER = WEB_SERVERS[ENVIRONMENT]
 
+BACKUP_SERVER_IP = '192.168.190.18' # 公共备份发布脚本所在的服务器IP(目前omega的任意一台服务器都可以)
+
 # 发布超时解锁时间(秒)，调用 _check_lock()的时候会去判断超时和解锁
 LOCK_TIMEOUT_PERIOD = 3600 * 1.5
 
@@ -115,6 +129,10 @@ FOLDER_ROOT = '/d/content/web-app-bak/'
 ITEM_ROOT_PATH = FOLDER_ROOT + 'ableskyapps/'
 
 SHELL_ROOT_PATH = FOLDER_ROOT + 'deployment/'
+
+BACKUP_ROOT_PATH = FOLDER_ROOT + 'backup/'   # 补丁组完结的公共备份发布
+
+BACKUP_SERVER_IP = '192.168.190.18'
 
 DEPLOY_LOG_NAME = 'deploy.log'
 

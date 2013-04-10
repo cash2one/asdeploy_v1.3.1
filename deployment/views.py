@@ -435,6 +435,7 @@ def start_deploy(request):
         record = DeployRecord.objects.get(pk = int(record_id_str))
         server_group = request.POST.get('serverGroup')
         patch_group_id = int(request.POST.get('patchGroupId') or 0)
+        deploy_direct = request.POST.get('deployDirect') or 'deploy'
         
         # 版本发布需要web.xml
         if record.status == DeployRecord.PREPARE:
@@ -445,7 +446,7 @@ def start_deploy(request):
             set_server_group(server_group=server_group)
             log_reader = LogReader()
             cache.set('log_reader_' + record_id_str, log_reader, 300)
-            deployer = Deployer(record = record)
+            deployer = Deployer(record = record, direct = deploy_direct)
             deployer.start()
             record.status = DeployRecord.DEPLOYING
             record.save()
@@ -668,13 +669,15 @@ def read_deploy_log_on_realtime(request):
     deploy_result_key = 'deploy_result_' + record_id_str
     deploy_result = cache.get(deploy_result_key)
     cache.delete(deploy_result_key)
-    record = DeployRecord.objects.get(pk = int(record_id_str))
-    if deploy_result:
-        record.status = record.status == DeployRecord.ROLLBACKING and DeployRecord.ROLLBACK or DeployRecord.SUCCESS
-    else:
-        record.status = DeployRecord.FAILURE
-#    record.status = deploy_result and DeployRecord.SUCCESS or DeployRecord.FAILURE
-    record.save()
+    
+    # 发布结束的状态修改操作不应该在这里进行
+#    record = DeployRecord.objects.get(pk = int(record_id_str))
+#    if deploy_result:
+#        record.status = record.status == DeployRecord.ROLLBACKING and DeployRecord.ROLLBACK or DeployRecord.SUCCESS
+#    else:
+#        record.status = DeployRecord.FAILURE
+##    record.status = deploy_result and DeployRecord.SUCCESS or DeployRecord.FAILURE
+#    record.save()
     params['isFinished'] = True
     params['deployResult'] = deploy_result
     return HttpResponse(json.dumps(params))
@@ -1094,4 +1097,33 @@ def _query_patch_groups(project_id, status):
     if status is not None:
         conditions.append(Q(status = status))
     return PatchGroup.objects.filter(*conditions).order_by('-id')
-    
+
+# 查看backup服务器上是否有新的备份源
+def check_new_backup_source(request):
+    conn = SimpleConnector(server_address = BACKUP_SERVER_IP)
+    if not conn.connect():
+        return  #todo 失败
+    conn.sftp.chdir(path = BACKUP_ROOT_PATH + 'www-baseline/compress/')
+    file_list = conn.sftp.listdir(path = '.')
+    new_file_list = []
+    cur_ts = '20130408153030'
+    max_ts = ''
+    ts_len = len('yyyyMMddhhmmss')
+    file_suffix = '.tar.gz'
+    if file_list and len(file_list):
+        for file_name in file_list:
+            end_pos = file_name.rfind(file_suffix)
+            if end_pos < ts_len:
+                continue
+            ts = file_name[end_pos - ts_len: end_pos]
+            if max_ts < ts:
+                max_ts = ts
+    if max_ts > cur_ts:
+        for file_name in file_list:
+            if file_name.find(max_ts) > -1:
+                new_file_list.append(file_name)
+    params = {
+        'has_new_backup_source': len(new_file_list) > 0,
+        'backup_source_list': new_file_list
+    }
+    return HttpResponse(json.dumps(params))

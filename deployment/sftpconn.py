@@ -7,6 +7,36 @@ import paramiko
 
 from deployment.deploysetting import *
 
+class SimpleConnector(object):
+    def __init__(self, server_address, port = FTP_PORT, username = FTP_USERNAME, password = FTP_PASSWORD):
+        self.ssh = None
+        self.sftp = None
+        self.server_address = server_address
+        self.port = port
+        self.username = username
+        self.password = password
+    
+    def connect(self):
+        try:
+            self.ssh = paramiko.Transport((self.server_address, self.port))
+            self.ssh.connect(username = self.username, password = self.password)
+            self.sftp = paramiko.SFTPClient.from_transport(self.ssh)
+            return True
+        except:
+            return False
+    
+    def disconnect(self):
+        try:
+            self.sftp.close()
+            self.ssh.close()
+            self.sftp = None
+            self.ssh = None
+            return True
+        except:
+            return False
+
+    
+
 class SftpConnector(object):
     def __init__(self, project = None):
         if not project:

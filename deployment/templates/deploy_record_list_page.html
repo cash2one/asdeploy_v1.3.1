@@ -36,6 +36,12 @@
 	.conflict {
 		background-color: #f88;
 	}
+	.backup {
+		background-color: #8f8;
+	}
+	.reset {
+		background-color: #09f;
+	}
 </style>
 {% endblock %}
 
@@ -204,6 +210,12 @@ $(function(){
 			<tr
 			{% if record.is_conflict_with_others %}
 				class="conflict"
+			{% endif %}
+			{% if record.status == 'backup_success'%}
+				class="backup"
+			{% endif %}
+			{% if record.status == 'reset_success'%}
+				class="reset"
 			{% endif %}
 			>
 				<td>{{record.id}}</td>

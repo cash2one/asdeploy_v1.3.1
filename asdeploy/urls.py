@@ -52,6 +52,8 @@ urlpatterns = patterns('',
     
     (r'^saveOrUpdatePatchGroup/(?P<patch_group_id>\d+)/$', save_or_update_patch_group),
     (r'^queryPatchGroups/', query_patch_groups),
+    (r'^checkNewBackupSource/$', check_new_backup_source),   # 查看是否有新的备份源
+    
     
     #检查硬盘挂载情况
     (r'^checkServerStatusForProject/(?P<project_name>[\w-]+)/$', check_server_status_for_project),

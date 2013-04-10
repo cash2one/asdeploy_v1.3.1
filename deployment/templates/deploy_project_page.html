@@ -278,6 +278,78 @@ $(function(){
 		})
 	});
 	
+	$('#startBackupBtn').click(function(){
+		$.post('/startDeploy/', {
+			recordId: '{{record.id}}',
+			deployType: '{{deployType}}',
+			serverGroup: $('#serverGroupSel').val(),	// 这个参数在此处没用
+			patchGroupId: '{{patchGroupId}}',
+			deployDirect: 'backup'
+		}, function(data){
+			var result = null;
+			try{
+				result = $.parseJSON(data);
+			} catch (e) {}
+			if(!result || result.beginDeploy != true) {
+				alert('补丁组发布启动失败!');
+				failedInDeployProcess(result.errorMsg);
+				return;
+			} else {
+				$('#startDeployBtn').attr({disabled: true});
+				$('#startRollbackBtn').attr({disabled: true});
+				$('#startBackupBtn').val('补丁组发布中').attr({disabled: true});
+				$('#deployStatus').html('补丁组发布启动成功').css({color: 'green'});
+				$('#logContent').val('');
+			}
+			var logReadInterval = 1500;
+			setTimeout(readLogOnRealtime, logReadInterval);
+			function readLogOnRealtime(){
+				$.getJSON('/readDeployLogOnRealtime/', {
+					recordId: '{{record.id}}'
+				}, function(data){
+					if(!data){
+						alert('日志实时读取出错了!');
+						failedInDeployProcess();
+						return;
+					}
+					if(data.isFinished === true){
+						alert('补丁组发布已完成!');
+						$('#startDeployBtn').attr({disabled: false});
+						$('#startRollbackBtn').attr({disabled: false});
+						$('#startBackupBtn').val('补丁组发布').attr({disabled: false});
+						if(data.deployResult === true){
+							$('#deployStatus').html('补丁组发布成功').css({color: 'green'});
+						}else{
+							$('#deployStatus').html('补丁组发布失败').css({color: 'red'});
+						}
+						return;
+					}
+					if(!data.isFinished){
+						$logContent = $('#logContent');
+						var newLogInfoArr = [];
+						if(data.logInfo && data.logInfo.length){
+							for(var i=0; i<data.logInfo.length; i++){
+								newLogInfoArr.push(data.logInfo[i]);
+							}
+						}
+						$logContent.val($logContent.val() + newLogInfoArr.join(''));
+						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
+						setTimeout(readLogOnRealtime, logReadInterval)
+					}
+				});
+			}
+		});
+		
+		function failedInDeployProcess(errorMsg){
+			var tip = errorMsg? ' [ ' + errorMsg + ' ] ' : '';
+			$('#startDeployBtn').attr({disabled: false});
+			$('#startRollbackBtn').attr({disabled: false});
+			$('#startBackupBtn').attr({disabled: false});
+			$('#deployStatus').html('补丁组发布失败，请重新发布' + tip).css({color: 'red'});
+		}
+		
+	});
+	
 	$('#startDeployBtn').click(function(){
 		$.post('/startDeploy/', {
 			recordId: '{{record.id}}',
@@ -297,6 +369,7 @@ $(function(){
 			}else{
 				$('#startDeployBtn').val('发布中').attr({disabled: true});
 				$('#startRollbackBtn').attr({disabled: true});
+				$('#startBackupBtn').attr({disabled: true});
 				$('#deployStatus').html('发布启动成功').css({color: 'green'});
 				$('#logContent').val('');
 			}
@@ -315,6 +388,7 @@ $(function(){
 						alert('发布已完成!');
 						$('#startDeployBtn').val('重新发布').attr({disabled: false});
 						$('#startRollbackBtn').attr({disabled: false});
+						$('#startBackupBtn').attr({disabled: false});
 						if(data.deployResult === true){
 							$('#deployStatus').html('发布成功').css({color: 'green'});
 						}else{
@@ -342,12 +416,14 @@ $(function(){
 			var tip = errorMsg? ' [ ' + errorMsg + ' ] ' : '';
 			$('#startDeployBtn').val('重新发布').attr({disabled: false});
 			$('#startRollbackBtn').attr({disabled: false});
+			$('#startBackupBtn').attr({disabled: false});
 			$('#deployStatus').html('发布失败，请重新发布' + tip).css({color: 'red'});
 		}
 	});
 	
 	if('{{deployType}}' == 'war'){
 		$('#startRollbackBtn').attr({disabled: true}).css({display: 'none'});
+		$('#startBackupBtn').attr({disabled: true}).css({display: 'none'});
 	}
 	$('#startRollbackBtn').click(function(){
 		var $this = $(this);
@@ -368,6 +444,7 @@ $(function(){
 			}else{
 				$this.val('回滚中').attr({disabled: true});
 				$('#startDeployBtn').attr({disabled: true});
+				$('#startBackupBtn').attr({disabled: true});
 				$('#deployStatus').html('回滚启动成功').css({color: 'green'});
 				$('#logContent').val('');
 			}
@@ -387,6 +464,7 @@ $(function(){
 						//TODO
 						$this.val('回滚').attr({disabled: false});
 						$('#startDeployBtn').attr({disabled: false});
+						$('#startBackupBtn').attr({disabled: false});
 						if(data.deployResult === true){
 							$('#deployStatus').html('回滚成功').css({color: 'green'});
 						}else{
@@ -414,6 +492,7 @@ $(function(){
 			var tip = errorMsg? ' [ ' + errorMsg + ' ] ' : '';
 			$('#startRollbackBtn').val('回滚').attr({disabled: false});
 			$('#startDeployBtn').attr({disabled: false});
+			$('#startBackupBtn').attr({disabled: false});
 			$('#deployStatus').html('回滚失败，请重新发布' + tip).css({color: 'red'});
 		}
 	});
@@ -680,6 +759,11 @@ $(function(){
 				<div style="padding-top: 20px;">
 					<input type="button" value="发布" id="startDeployBtn" _disabled="disabled"/>
 					<input type="button" value="回滚" id="startRollbackBtn" _disabled="disabled"/>
+					{% if patchGroup and patchGroup.status == 'testing' %}
+						{% if user.id == patchGroup.creator.id or user.is_superuser %}
+						<input type="button" value="补丁组发布" id="startBackupBtn" _disabled="disabled"/>
+						{% endif %}
+					{% endif %}
 					<span style="font-size: 20px;" id="deployStatus"></span>
 				</div>
 				<div style="padding-top: 20px;">

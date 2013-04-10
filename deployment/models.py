@@ -4,6 +4,11 @@ from django.db import models
 
 from django.contrib.auth.models import User
 
+#------ 表结构需要手工修改的地方 ------#
+# dpl_deployrecord.status要扩容到varchar(30)
+# dpl_deployrecord添加is_conflict_with_others字段
+# dpl_deployitem添加patch_group_id字段
+
 class Project(models.Model):
     name = models.CharField(max_length = 30)
     war_name = models.CharField(max_length = 30)
@@ -44,12 +49,19 @@ class DeployRecord(models.Model):
     FAILURE = 'failure'
     ROLLBACKING = 'rollbacking'
     ROLLBACK = 'rollback'
+    ROLLBACK_FAILURE = 'rollback_failure'
+    BACKUP_DEPLOYING = 'backup_deploying'  # 补丁组完结发布  
+    BACKUP_SUCCESS = 'backup_success'
+    BACKUP_FAILURE = 'backup_failure'
+    RESET_DEPLOYING = 'reset_deploying'  # 版本接收发布
+    RESET_SUCCESS = 'reset_success'
+    RESET_FAILURE = 'reset_failure'
     
     user = models.ForeignKey(User)
     project = models.ForeignKey(Project)
     deploy_item = models.ForeignKey(DeployItem, null = True)
     create_time = models.DateTimeField()
-    status = models.CharField(max_length = 15)
+    status = models.CharField(max_length = 30)
     is_conflict_with_others = models.BooleanField(default = False)
     
     class Meta:
@@ -123,4 +135,10 @@ class ConflictDetail(models.Model):
     
     class Meta:
         db_table = 'dpl_conflict_detail'
-
+        
+class ResetInfo(models.Model):
+    executor = models.ForeignKey(User)
+    reset_source_ts = models.TextField(max_length = 14)    # reset源的时间戳
+    reset_time = models.DateTimeField()
+    class Meta:
+        db_table = 'dpl_reset_info'
