@@ -104,18 +104,15 @@ def _reset_item(item):
     flag = _reset_tar(item)
     return flag
 
+# reset只能ab一起发
 def _reset_tar(item):
     sh_path = _get_reset_sh_path_by_item(item)
     sh_params = [
         item.folder_path,
         item.file_name,
     ]
-    server_group = get_server_group()
-    if 'ab' == server_group:
-        sh_command = 'sh ' + sh_path + ' notused a ' + ' '.join(sh_params) + ' > ' + DEPLOY_LOG_PATH
-        sh_command += '; sh ' + sh_path + ' notused b ' + ' '.join(sh_params) + ' > ' + DEPLOY_LOG_PATH
-    else:
-        sh_command = 'sh ' + sh_path + ' notused ' + server_group + ' ' + ' '.join(sh_params) + ' > ' + DEPLOY_LOG_PATH
+    sh_command = 'sh ' + sh_path + ' notused a ' + ' '.join(sh_params) + ' > ' + DEPLOY_LOG_PATH
+    sh_command += '; sh ' + sh_path + ' notused b ' + ' '.join(sh_params) + ' > ' + DEPLOY_LOG_PATH
     flag = os.system(sh_command)
     return flag == 0
     
