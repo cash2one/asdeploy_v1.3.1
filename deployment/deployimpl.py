@@ -87,12 +87,16 @@ def _save_reset_info(record, item):
     end_pos = filename.rfind('.tar.gz')
     start_pos = end_pos - 14
     ts = start_pos >= 0 and filename[start_pos, end_pos] or ''
+    reset_type = filename.find(ResetInfo.TYPE_STATIC) >= 0 \
+        and ResetInfo.TYPE_STATIC \
+        or ResetInfo.TYPE_AJAXABLESKY
     reset_info = ResetInfo(
         operator = record.user,
         reset_source_ts = ts,
         reset_time = datetime.now(),
         deploy_record = record,
         deploy_item = item,
+        reset_type = reset_type,
     )
     reset_info.save()
     return reset_info

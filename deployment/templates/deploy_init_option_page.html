@@ -118,6 +118,11 @@ function submitCheck(){
 		alert('此工程发布需要选择补丁组!');
 		return false;
 	}
+	if($deployType.val() == 'reset'
+			&& $('#project').val() != '{{ajaxableskyProject.id}}'){
+		alert('只有ajaxablesky可以进行重置发布!');
+		return false;	
+	}
 	return true;
 }
 </script>
@@ -141,6 +146,9 @@ function submitCheck(){
 				<option value="">请选择...</option>
 				<option value="war">war包</option>
 				<option value="patch">补丁</option>
+				{% if has_new_backup_source %}
+				<option value="reset">重置</option>
+				{% endif %}
 			</select>
 		</div>
 		<div class="sub_wrap">

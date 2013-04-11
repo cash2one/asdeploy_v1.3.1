@@ -135,10 +135,25 @@ def deploy_init_option_page(request):
                 readme_content = _get_readme_content(folder_path)
                 _params['readmeContent'] = readme_content
             params = RequestContext(request, _params)
-            return render_to_response('deploy_project_page.html', params)
+            
+            if deploy_type == DeployItem.RESET:
+                new_backup_source_list = _get_new_backup_source_list()
+                params['new_backup_source_list'] = new_backup_source_list
+                return render_to_response('reset_project_page.html', params)
+            else:
+                return render_to_response('deploy_project_page.html', params)
+        
+    # 看下有没有新的backup source
+    try:
+        new_backup_source_list = _get_new_backup_source_list()
+    except:
+        new_backup_source_list = []
+    
     params = RequestContext(request, {
         'error_msg': error_msg,
-        'projects': Project.objects.all()
+        'projects': Project.objects.all(),
+        'ajaxableskyProject': Project.objects.get(war_name = 'ajaxablesky'),    # used for reset
+        'has_new_backup_source': len(new_backup_source_list) > 0
     })
     return render_to_response('deploy_init_option_page.html', params)
 
@@ -1099,27 +1114,49 @@ def _query_patch_groups(project_id, status):
 # 查看backup服务器上是否有新的备份源
 @login_required
 def get_new_backup_source_list(request):
-    conn = SimpleConnector(server_address = BACKUP_SERVER_IP)
-    if not conn.connect():
+    try:
+        return HttpResponse(json.dumps({
+            'isSuccess': True,
+            'new_backup_source_list': _get_new_backup_source_list(),
+        }))
+    except:
         return  HttpResponse(json.dumps({
             'isSuccess': False,
             'errorMsg': '未能成功链接备份源的服务器!',
         }))
+
+def _get_new_backup_source_list():
+    conn = SimpleConnector(server_address = BACKUP_SERVER_IP)
+    if not conn.connect():
+        raise Exception('failed to connect the backup source server!')
     conn.sftp.chdir(path = BACKUP_ROOT_PATH + 'www-baseline/compress/')
-    file_list = conn.sftp.listdir(path = '.')
-    conn.disconnect()
+    try:
+        file_list = conn.sftp.listdir(path = '.')
+    finally:
+        conn.disconnect()
     new_backup_source_list = []
-    cur_ts = '19000101125959'
+    cur_static_ts, cur_ajaxablesky_ts = _get_reset_ts_tuple()
     if file_list and len(file_list):
         for file_name in file_list:
+            cur_ts = file_name.find(ResetInfo.TYPE_STATIC) >= 0 and cur_static_ts or cur_ajaxablesky_ts
             if not _is_new_backup_source(file_name, cur_ts, '.tar.gz'):
                 continue
             new_backup_source_list.append(file_name)
-            
-    return HttpResponse(json.dumps({
-        'isSuccess': True,
-        'new_backup_source_list': new_backup_source_list,
-    }))
+    new_backup_source_list.sort()
+    return new_backup_source_list
+
+def _get_reset_ts_tuple():
+    default_ts = '19000101235959'
+    try:
+        # 一个也没有的时候会报错，实在不清楚django下这种情况怎么处理
+        cur_static_ts = ResetInfo.objects.filter(reset_type__exact = ResetInfo.TYPE_STATIC).order_by('-reset_time')[0].reset_source_ts
+    except:
+        cur_static_ts = default_ts
+    try:
+        cur_ajaxablesky_ts = ResetInfo.objects.filter(reset_type__exact = ResetInfo.TYPE_AJAXABLESKY).order_by('-reset_time')[0].reset_source_ts
+    except:
+        cur_ajaxablesky_ts = default_ts
+    return (cur_static_ts, cur_ajaxablesky_ts)
 
 def _is_new_backup_source(file_name, cur_ts, file_suffix):
     if not file_name or not cur_ts or not file_suffix:
@@ -1129,7 +1166,7 @@ def _is_new_backup_source(file_name, cur_ts, file_suffix):
     if end_pos < ts_len:
         return False
     ts = file_name[end_pos - ts_len: end_pos]
-    if ts <= cur_ts:
+    if ts < cur_ts:
         return False
     return True
 
@@ -1145,8 +1182,9 @@ def obtain_reset_item(request):
     record_id = request.POST.get('recordId')
     version = string.strip(request.POST.get('version') or '')
     source_filename = request.POST.get('sourceFilename')
-    
-    cur_ts = '19000101235959'
+
+    cur_static_ts, cur_ajaxablesky_ts = _get_reset_ts_tuple()
+    cur_ts = source_filename.find(ResetInfo.TYPE_STATIC) >= 0 and cur_static_ts or cur_ajaxablesky_ts
     if not _is_new_backup_source(source_filename, cur_ts, '.tar.gz'):
         return HttpResponse(json.dumps({
             'isSuccess': False,

@@ -139,10 +139,16 @@ class ConflictDetail(models.Model):
 
 # 依据此表中的信息来判断是否有新的备份源
 class ResetInfo(models.Model):
+    
+    TYPE_STATIC = 'static'
+    TYPE_AJAXABLESKY = 'ajaxablesky'
+    
     operator = models.ForeignKey(User)                      # 操作者
     reset_source_ts = models.TextField(max_length = 14)    # reset源的时间戳，省得每次都去翻DeployItem
     reset_time = models.DateTimeField()
     deploy_record = models.ForeignKey(DeployRecord)
     deploy_item = models.ForeignKey(DeployItem)
+    reset_type = models.TextField(max_length = 30)
     class Meta:
         db_table = 'dpl_reset_info'
+        
