@@ -141,6 +141,9 @@ DEPLOY_LOG_PATH = SHELL_ROOT_PATH + DEPLOY_LOG_NAME
 # 文件上传的临时目录
 DPL_FILE_UPLOAD_TEMP_DIR = '/d/content/web-app-bak/ableskyapps/tempuploads/'
 
+# 保存backup source的本地目录，用于reset发布
+DPL_BACKUP_SOURCE_LOCAL_DIR = '/d/content/web-app-bak/ableskyapps/backupsources/'
+
 
 # ftp运行目录
 

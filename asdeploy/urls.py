@@ -52,7 +52,8 @@ urlpatterns = patterns('',
     
     (r'^saveOrUpdatePatchGroup/(?P<patch_group_id>\d+)/$', save_or_update_patch_group),
     (r'^queryPatchGroups/', query_patch_groups),
-    (r'^checkNewBackupSource/$', check_new_backup_source),   # 查看是否有新的备份源
+    (r'^getNewBackupSourceList/$', get_new_backup_source_list),   # 查看是否有新的备份源
+    (r'^obtainResetItem/$', obtain_reset_item),     # 从backup的服务器上获取指定的数据源
     
     
     #检查硬盘挂载情况

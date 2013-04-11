@@ -5,7 +5,7 @@ import json
 import string
 import urllib
 import chardet
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.core.cache import cache
 from django.db.models import Q
@@ -1026,8 +1026,6 @@ def _find_patch_group_conflict_file_list(related_patch_group_id = 0):
         })
     return patch_group_conflict_file_list
 
-# 虽然也有更新的功能，但是目前只使用其新增的功能
-# 更新会用更复杂的那个
 @login_required
 def save_or_update_patch_group(request, patch_group_id = 0):
     patch_group_id = int(patch_group_id)
@@ -1099,31 +1097,123 @@ def _query_patch_groups(project_id, status):
     return PatchGroup.objects.filter(*conditions).order_by('-id')
 
 # 查看backup服务器上是否有新的备份源
-def check_new_backup_source(request):
+@login_required
+def get_new_backup_source_list(request):
     conn = SimpleConnector(server_address = BACKUP_SERVER_IP)
     if not conn.connect():
-        return  #todo 失败
+        return  HttpResponse(json.dumps({
+            'isSuccess': False,
+            'errorMsg': '未能成功链接备份源的服务器!',
+        }))
     conn.sftp.chdir(path = BACKUP_ROOT_PATH + 'www-baseline/compress/')
     file_list = conn.sftp.listdir(path = '.')
-    new_file_list = []
-    cur_ts = '20130408153030'
-    max_ts = ''
-    ts_len = len('yyyyMMddhhmmss')
-    file_suffix = '.tar.gz'
+    conn.disconnect()
+    new_backup_source_list = []
+    cur_ts = '19000101125959'
     if file_list and len(file_list):
         for file_name in file_list:
-            end_pos = file_name.rfind(file_suffix)
-            if end_pos < ts_len:
+            if not _is_new_backup_source(file_name, cur_ts, '.tar.gz'):
                 continue
-            ts = file_name[end_pos - ts_len: end_pos]
-            if max_ts < ts:
-                max_ts = ts
-    if max_ts > cur_ts:
-        for file_name in file_list:
-            if file_name.find(max_ts) > -1:
-                new_file_list.append(file_name)
-    params = {
-        'has_new_backup_source': len(new_file_list) > 0,
-        'backup_source_list': new_file_list
-    }
-    return HttpResponse(json.dumps(params))
+            new_backup_source_list.append(file_name)
+            
+    return HttpResponse(json.dumps({
+        'isSuccess': True,
+        'new_backup_source_list': new_backup_source_list,
+    }))
+
+def _is_new_backup_source(file_name, cur_ts, file_suffix):
+    if not file_name or not cur_ts or not file_suffix:
+        return False
+    ts_len = len(cur_ts)
+    end_pos = file_name.rfind(file_suffix)
+    if end_pos < ts_len:
+        return False
+    ts = file_name[end_pos - ts_len: end_pos]
+    if ts <= cur_ts:
+        return False
+    return True
+
+# 从公共本分源所在的服务器上向当前测试环境拷贝备份源
+@login_required
+def obtain_reset_item(request):
+    if not request.POST:
+        return HttpResponse(json.dumps({
+            'isSuccess': False,
+            'errorMsg': '必须用表单提交',
+        }))
+    proj_id = request.POST.get('projId')
+    record_id = request.POST.get('recordId')
+    version = string.strip(request.POST.get('version') or '')
+    source_filename = request.POST.get('sourceFilename')
+    
+    cur_ts = '19000101235959'
+    if not _is_new_backup_source(source_filename, cur_ts, '.tar.gz'):
+        return HttpResponse(json.dumps({
+            'isSuccess': False,
+            'errorMsg': '备份源 [ ' + source_filename  + ' ] 版本过旧!',
+        }))
+    
+    conn = SimpleConnector(server_address = BACKUP_SERVER_IP)
+    if not conn.connect():
+        return HttpResponse(json.dump({
+            'isSuccess': False,
+            'errorMsg': '未能成功连接备份源的服务器!',
+        }))
+    
+    local_folderpath = DPL_BACKUP_SOURCE_LOCAL_DIR
+    local_source_path = local_folderpath + source_filename  # 本地文件源路径
+    if not os.path.isdir(local_folderpath):
+        os.makedirs(local_folderpath)
+    # 清除3天以前的文件
+    three_days_ago = datetime.now() - timedelta(days = 3)
+    tda_ts = datetime.strftime(three_days_ago, '%Y%m%d%H%M%S')
+    for filename in os.listdir(local_folderpath):
+        if not _is_new_backup_source(filename, tda_ts, '.tar.gz'):
+            try:
+                os.remove(local_source_path + filename)
+            except:
+                pass    # 理论上不会沦落到这一行
+        
+    conn.sftp.chdir(path = BACKUP_ROOT_PATH + 'www-baseline/compress/')
+    try: 
+        conn.sftp.get(source_filename, local_source_path)
+    except: 
+        return HttpResponse(json.dumps({
+            'isSuccess': False,
+            'errorMsg': '未能成功获取备份源!'
+        }))
+    finally: 
+        conn.disconnect()
+    
+    project = Project.objects.get(pk = proj_id)
+    
+    items = DeployItem.objects.filter(file_name__exact = source_filename, version__exact = version)
+    item = (items and len(items) > 0) and items[0] or None
+    now_time = datetime.now()
+    if not item: 
+        item = DeployItem(
+            user = request.user,
+            project = project,
+            version = version,
+            deploy_type = DeployItem.RESET,
+            file_name = source_filename,
+            folder_path = local_folderpath,
+            create_time = now_time,
+            update_time = now_time,
+        )
+    else: 
+        item.updte_time = now_time
+    item.save()
+    
+    record = DeployRecord.objects.get(pk = record_id)
+    if record:
+        record.statu = DeployRecord.UPLOADED
+        record.deploy_item = item
+        record.save()
+        
+    return HttpResponse(json.dumps({
+        'isSuccess': True,
+        'message': '源文件获取成功!',
+        'filename': source_filename,
+        'size': os.path.getsize(local_source_path),
+    }))

@@ -41,6 +41,10 @@ class Deployer(threading.Thread):
         }.get(self.direct) or 'unknown')
         self.record.save()
         
+        # 如果是reset，就save下信息
+        if self.item.deploy_type == DeployItem.RESET:
+            _save_reset_info(self.record, self.item)
+        
         # 从缓存中删除此次的发布信息
         cache.set(deploy_result_key, flag)
         cache.delete(status_key)
@@ -78,25 +82,40 @@ def _rollback_patch(item):
     flag = os.system(sh_command)
     return flag == 0
 
-
-# 本质上reset的item会是空的，所以有可能需要单写
+def _save_reset_info(record, item):
+    filename = item.file_name
+    end_pos = filename.rfind('.tar.gz')
+    start_pos = end_pos - 14
+    ts = start_pos >= 0 and filename[start_pos, end_pos] or ''
+    reset_info = ResetInfo(
+        operator = record.user,
+        reset_source_ts = ts,
+        reset_time = datetime.now(),
+        deploy_record = record,
+        deploy_item = item,
+    )
+    reset_info.save()
+    return reset_info
+    
+    
 def _reset_item(item):
-    if item.deploy_type != DeployItem.WAR:
+    if item.deploy_type != DeployItem.RESET:
         return False
-    flag = _reset_war(item)
+    flag = _reset_tar(item)
     return flag
 
-def _reset_war(item):   # 其实是tar包
-    shell_path = _get_reset_shell_path()
-    remote_temp_dir = FOLDER_ROOT + '/reset-temp/'
-    if not os.path.exists(remote_temp_dir) :
-        os.makedirs(remote_temp_dir)
-    shell_params = [
-        LANIP,
-        _get_war_sh_path_by_item(item),
-        remote_temp_dir,
+def _reset_tar(item):
+    sh_path = _get_reset_sh_path_by_item(item)
+    sh_params = [
+        item.folder_path,
+        item.file_name,
     ]
-    sh_command = 'ssh ' + BACKUP_SERVER_IP + ' ' + shell_path + ' ' + ' '.join(shell_params) + ' > ' + DEPLOY_LOG_PATH
+    server_group = get_server_group()
+    if 'ab' == server_group:
+        sh_command = 'sh ' + sh_path + ' notused a ' + ' '.join(sh_params) + ' > ' + DEPLOY_LOG_PATH
+        sh_command += '; sh ' + sh_path + ' notused b ' + ' '.join(sh_params) + ' > ' + DEPLOY_LOG_PATH
+    else:
+        sh_command = 'sh ' + sh_path + ' notused ' + server_group + ' ' + ' '.join(sh_params) + ' > ' + DEPLOY_LOG_PATH
     flag = os.system(sh_command)
     return flag == 0
     
@@ -161,6 +180,15 @@ def _deploy_war(item):
 def _get_war_sh_path_by_item(item):
     name = item.project.name + '-deploy'
     return SHELL_ROOT_PATH + name + '/' + name + '.sh'
+
+#目前只支持web，需要区分ajaxablesky和static
+def _get_reset_sh_path_by_item(item):
+    name = item.project.name + '-deploy'
+    if item.file_name.find('static-') == 0:
+        return SHELL_ROOT_PATH + name + '/' + 'as-static-deploy.sh'
+    else:
+        return SHELL_ROOT_PATH + name + '/' + name + '.sh'
+        
 
 def _deploy_patch(item):
     item_name = item.file_name

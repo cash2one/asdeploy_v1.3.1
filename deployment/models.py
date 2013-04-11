@@ -23,6 +23,7 @@ class Project(models.Model):
 class DeployItem(models.Model):
     WAR = 'war'
     PATCH = 'patch'
+    RESET = 'reset'
 
     user = models.ForeignKey(User)
     project = models.ForeignKey(Project)
@@ -135,10 +136,13 @@ class ConflictDetail(models.Model):
     
     class Meta:
         db_table = 'dpl_conflict_detail'
-        
+
+# 依据此表中的信息来判断是否有新的备份源
 class ResetInfo(models.Model):
-    executor = models.ForeignKey(User)
-    reset_source_ts = models.TextField(max_length = 14)    # reset源的时间戳
+    operator = models.ForeignKey(User)                      # 操作者
+    reset_source_ts = models.TextField(max_length = 14)    # reset源的时间戳，省得每次都去翻DeployItem
     reset_time = models.DateTimeField()
+    deploy_record = models.ForeignKey(DeployRecord)
+    deploy_item = models.ForeignKey(DeployItem)
     class Meta:
         db_table = 'dpl_reset_info'
