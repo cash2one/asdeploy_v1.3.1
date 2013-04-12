@@ -981,7 +981,7 @@ def patch_group_list_page(request, page_num=1):
             conditions.append(Q(status = status))
         patch_group_name = request.POST.get('patchGroupName')
         if patch_group_name:
-            query_params['patchGropuName'] = patch_group_name
+            query_params['patchGroupName'] = patch_group_name
             conditions.append(Q(name = patch_group_name))
     query_result = PatchGroup.objects.filter(*conditions).order_by('-id')
     paged_result = Paginator(query_result, num_per_page);
@@ -1151,8 +1151,14 @@ def _get_new_backup_source_list():
             if not _is_new_backup_source(file_name, cur_ts, '.tar.gz'):
                 continue
             new_backup_source_list.append(file_name)
-    new_backup_source_list.sort()
+    start_pos, end_pos = -21, -7 # 时间戳在文件名中的位置
+    new_backup_source_list.sort(
+        cmp = lambda n1, n2: cmp(n1[start_pos: end_pos], n2[start_pos: end_pos]), 
+        key = None, 
+        reverse = True
+    )
     return new_backup_source_list
+
 
 def _get_reset_ts_tuple():
     default_ts = '19000101235959'

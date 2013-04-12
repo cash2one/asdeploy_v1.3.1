@@ -38,10 +38,12 @@
 <script>
 $(function(){
 	
+	$('#project').val('{{query_params.project}}');
+	
 	// 新的查询，必须保证是第一页
 	$('#queryBtn').click(function(){
-		var recordForm = $('#deploy_record_query_form');
-		recordForm.attr({action: '/deployRecordList/1/'});
+		var recordForm = $('#patch_group_query_form');
+		recordForm.attr({action: '/patchGroupList/1/'});
 		recordForm.submit();
 		return false;
 	});
@@ -129,8 +131,8 @@ function reloadPage(){
 					<td>
 						<select name="project" id="project">
 							<option value="0">全部</option>
-							{% for project in projects %}
-								<option value="{{project.id}}">{{project.name}}</option>
+							{% for prj in projects %}
+								<option value="{{prj.id}}">{{prj.name}}</option>
 							{% endfor%}
 						</select>
 					</td>

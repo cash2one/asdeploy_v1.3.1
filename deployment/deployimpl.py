@@ -142,7 +142,7 @@ def _backup_patch(item):
         ITEM_ROOT_PATH + item.project.name + '-' + item.version + '/' + item_name,
         ENVIRONMENT,
     ]
-    sh_command = 'ssh ' + BACKUP_SERVER_IP + ' ' + shell_path + ' ' + ' '.join(shell_params) + ' > ' + DEPLOY_LOG_PATH
+    sh_command = 'ssh ' + BACKUP_SERVER_IP + ' ' + shell_path + ' ' + ' '.join(shell_params) + ' >> ' + DEPLOY_LOG_PATH
     flag = os.system(sh_command)
     return flag == 0
 
