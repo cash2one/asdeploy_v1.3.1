@@ -147,7 +147,8 @@ $(function(){
 				projId: '{{project.id}}',
 				version: '{{version}}',
 				deployType: '{{deployType}}',
-				recordId: '{{record.id}}'
+				recordId: '{{record.id}}',
+				patchGroupId: '{{patchGroupId}}'
 			},
 			success: function (data, status){
 				if(typeof data == 'object' && data.isSuccess === true){
@@ -167,7 +168,7 @@ $(function(){
 			},
 			error: function(data, status, e){
 				$('#uploadResult')
-						.html('文件上传失败!')
+						.html(data.errorMsg || '文件上传失败!')
 						.css({color: 'red'});
 				$('#uploadDetailWrap').hide();
 				$this.val('重新上传').attr({disabled: false});

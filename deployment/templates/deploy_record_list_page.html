@@ -40,7 +40,7 @@
 		background-color: #8f8;
 	}
 	.reset {
-		background-color: #0bf;
+		background-color: #0df;
 	}
 </style>
 {% endblock %}
@@ -208,7 +208,7 @@ $(function(){
 			</tr>
 			{% for record in records %}
 			<tr
-			{% if record.is_conflict_with_others %}
+			{% if record.is_conflict_with_others and record.status != 'backup_success' %}
 				class="conflict"
 			{% endif %}
 			{% if record.status == 'backup_success'%}

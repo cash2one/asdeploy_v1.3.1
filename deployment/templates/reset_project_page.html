@@ -140,7 +140,11 @@ $(function(){
 				$('#obtainResult').html(result.errorMsg).css({color: 'red'});
 				alert('备份源获取失败！');
 			} else {
-				$('#obtainResult').html('备份源 [ ' + result.filename +' ] 获取成功!').css({color: 'green'});
+				var sizeUnits = ['byte', 'kb', 'MB', 'GB']
+				var size = result.size;
+				for(i=0; i <=sizeUnits.length && size > 1024; size = (size/1024).toFixed(2), i++);
+				var sizeStr = size + sizeUnits[i];
+				$('#obtainResult').html('备份源 [' + result.filename +'][' + sizeStr + '] 获取成功!').css({color: 'green'});
 				alert('备份源获取成功!');
 			}
 			$this.attr({disabled: false});

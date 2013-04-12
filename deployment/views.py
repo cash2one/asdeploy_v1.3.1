@@ -311,12 +311,21 @@ def upload_deploy_item(request):
         record_id = int(request.POST.get('recordId'))
         version = string.strip(request.POST.get('version') or '')
         deploy_type = request.POST.get('deployType')
+        patch_group_id = int(request.POST.get('patchGroupId') or 0)
         
         project = Project.objects.get(pk = proj_id)
         
         deploy_item_file = request.FILES.get('deployItemField')
         filename = deploy_item_file.name
         size = deploy_item_file.size
+        
+        if patch_group_id:
+            patch_group = PatchGroup.objects.get(pk = patch_group_id)
+            if patch_group and patch_group.check_code and filename.find(patch_group.check_code) == -1:
+                return HttpResponse(json.dumps({
+                    'isSuccess': False,
+                    'errorMsg': '补丁名称与补丁组的标识号不匹配!'
+                }))
         
         folderpath = _generate_upload_folder_path(project.name, version)
         if not os.path.isdir(folderpath):

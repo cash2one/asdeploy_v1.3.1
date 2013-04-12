@@ -30,7 +30,7 @@ class Deployer(threading.Thread):
         flag = ({
             'deploy': _deploy_item,
             'rollback': _rollback_item,
-            'backup': _backup_item,
+            'backup': lambda x: _deploy_item(x) and _backup_item(x),
             'reset': _reset_item,
          }.get(self.direct) or (lambda x: False) )(self.item)
         
