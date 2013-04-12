@@ -31,6 +31,23 @@
 <script>
 $(function(){
 	highlightConflict();
+	
+	$('#ignoreResetBtn').click(function(){
+		if(!confirm('确认要忽略本次重置发布')){
+			return;
+		}
+		$.post('/ignoreResetRecord/', {
+			recordId: '{{record.id}}'
+		}, function(data){
+			var result = $.parseJSON(data);
+			if(result && result.isSuccess === true) {
+				alert('重置发布忽略成功!');
+				window.location.reload();
+			} else {
+				alert(result.errorMsg || '重置发布忽略失败!');
+			}
+		});
+	})
 });
 
 function highlightConflict(){
@@ -58,6 +75,9 @@ function highlightConflict(){
 		{% if record.deploy_item.patch_group %}
 		<h3>所属补丁组：{{record.deploy_item.patch_group.name}}</h3>
 		{% endif%}
+		{% if record.status == 'reset_success' %}
+		<input type="button" value="重置忽略" id="ignoreResetBtn"/>
+		{% endif %}
 	</div>
 	<div class="sect_wrap">
 		<div class="sect_title">

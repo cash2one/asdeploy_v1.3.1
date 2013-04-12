@@ -1270,3 +1270,27 @@ def obtain_reset_item(request):
         'filename': source_filename,
         'size': os.path.getsize(local_source_path),
     }))
+
+def ignore_reset_record(request):    
+    record_id = int(request.POST.get('recordId')) or 0
+    if not record_id:
+        return HttpResponse(json.dumps({
+            'isSuccess': False,
+            'errorMsg': 'record_id有误!',
+        }))
+    try: 
+        record = DeployRecord.objects.get(id = record_id)
+        record.status = DeployRecord.RESET_IGNORED
+        reset_info = ResetInfo.objects.get(deploy_record__id = record_id)
+        reset_info.is_ignored = True
+        reset_info.save()
+        record.save()
+    except:
+        return HttpResponse(json.dumps({
+            'isSuccess': False,
+            'errorMsg': '相关数据有误!',
+        }))
+    
+    return HttpResponse(json.dumps({
+        'isSuccess': True
+    }))

@@ -54,6 +54,7 @@ urlpatterns = patterns('',
     (r'^queryPatchGroups/', query_patch_groups),
     (r'^getNewBackupSourceList/$', get_new_backup_source_list),   # 查看是否有新的备份源
     (r'^obtainResetItem/$', obtain_reset_item),     # 从backup的服务器上获取指定的数据源
+    (r'^ignoreResetRecord/$', ignore_reset_record), # 忽略已成功的reset发布
     
     
     #检查硬盘挂载情况

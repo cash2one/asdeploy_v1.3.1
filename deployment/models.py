@@ -57,6 +57,7 @@ class DeployRecord(models.Model):
     RESET_DEPLOYING = 'reset_deploying'  # 版本接收发布
     RESET_SUCCESS = 'reset_success'
     RESET_FAILURE = 'reset_failure'
+    RESET_IGNORED = 'reset_ignored'     # 忽略成功的reset发布
     
     user = models.ForeignKey(User)
     project = models.ForeignKey(Project)
@@ -151,6 +152,7 @@ class ResetInfo(models.Model):
     deploy_record = models.ForeignKey(DeployRecord)
     deploy_item = models.ForeignKey(DeployItem)
     reset_type = models.TextField(max_length = 30)
+    is_ignored = models.BooleanField(default = False)
     class Meta:
         db_table = 'dpl_reset_info'
         
