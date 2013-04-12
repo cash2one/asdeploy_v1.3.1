@@ -52,6 +52,7 @@ function highlightConflict(){
 	<div class="basic_info">
 		<h3>发布者: {{record.user.username}}</h3>
 		<h3>发布类型: {{record.deploy_item.deploy_type}}</h3>
+		<h3>发布结果: {{record.status}}</h3>
 		<h3>上传文件名: </h3>
 		<h3>{{record.deploy_item.file_name}}</h3>
 		{% if record.deploy_item.patch_group %}

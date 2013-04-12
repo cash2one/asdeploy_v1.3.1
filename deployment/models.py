@@ -138,6 +138,8 @@ class ConflictDetail(models.Model):
         db_table = 'dpl_conflict_detail'
 
 # 依据此表中的信息来判断是否有新的备份源
+# 里面的信息除了reset_source_ts以外，其他的基本都是做冗余，并且目前还没有用到
+# 只有reset发布成功的时候，才会记录此信息
 class ResetInfo(models.Model):
     
     TYPE_STATIC = 'static'

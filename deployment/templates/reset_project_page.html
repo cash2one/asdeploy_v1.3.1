@@ -151,6 +151,7 @@ $(function(){
 		$.post('/startDeploy/', {
 			recordId: '{{record.id}}',
 			deployType: '{{deployType}}',
+			deployDirect: 'reset'
 		}, function(data){
 			var result = null;
 			try{
@@ -179,7 +180,7 @@ $(function(){
 					}
 					if(data.isFinished === true){
 						alert('重置发布已完成!');
-						$('#startDeployBtn').val('重置发布').attr({disabled: false});
+						$('#startResetBtn').val('重置发布').attr({disabled: false});
 						if(data.deployResult === true){
 							$('#deployStatus').html('重置发布成功').css({color: 'green'});
 						}else{

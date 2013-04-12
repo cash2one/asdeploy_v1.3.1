@@ -10,6 +10,8 @@ from django.core.cache import cache
 from deployment.models import *
 from deployment.deploysetting import *
 
+import pdb
+
 class Deployer(threading.Thread):
     def __init__(self, record, direct='deploy'):
         threading.Thread.__init__(self)
@@ -42,7 +44,7 @@ class Deployer(threading.Thread):
         self.record.save()
         
         # 如果是reset，就save下信息
-        if self.item.deploy_type == DeployItem.RESET:
+        if flag and self.item.deploy_type == DeployItem.RESET:
             _save_reset_info(self.record, self.item)
         
         # 从缓存中删除此次的发布信息
@@ -86,7 +88,7 @@ def _save_reset_info(record, item):
     filename = item.file_name
     end_pos = filename.rfind('.tar.gz')
     start_pos = end_pos - 14
-    ts = start_pos >= 0 and filename[start_pos, end_pos] or ''
+    ts = start_pos >= 0 and filename[start_pos: end_pos] or ''
     reset_type = filename.find(ResetInfo.TYPE_STATIC) >= 0 \
         and ResetInfo.TYPE_STATIC \
         or ResetInfo.TYPE_AJAXABLESKY
@@ -100,7 +102,6 @@ def _save_reset_info(record, item):
     )
     reset_info.save()
     return reset_info
-    
     
 def _reset_item(item):
     if item.deploy_type != DeployItem.RESET:
@@ -145,9 +146,6 @@ def _backup_patch(item):
     flag = os.system(sh_command)
     return flag == 0
 
-# backup和reset的发布本质上可以跟以前的代码整合在一起的
-# 但是需要以前的代码改为ssh访问脚本，需要重构
-# 目前暂时先不改了，等需求进一步稳定后再重构吧
 def _deploy_item(item):
     flag = False
     if not item:

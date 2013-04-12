@@ -259,7 +259,7 @@ def deploy_record_detail_page(request, record_id):
         readme = _get_readme_content(folder_path)
         file_list = _get_file_list(folder_path)
         #file_list_content = '\r\n'.join(file_list)
-    elif item.deploy_type == DeployItem.WAR:
+    elif item.deploy_type == DeployItem.WAR or item.deploy_type == DeployItem.RESET:
         readme = _get_readme_content(item.folder_path)
         #file_list_content = item.file_name
         file_list = [item.file_name]
@@ -1166,7 +1166,7 @@ def _is_new_backup_source(file_name, cur_ts, file_suffix):
     if end_pos < ts_len:
         return False
     ts = file_name[end_pos - ts_len: end_pos]
-    if ts < cur_ts:
+    if ts <= cur_ts:
         return False
     return True
 
@@ -1245,7 +1245,7 @@ def obtain_reset_item(request):
     
     record = DeployRecord.objects.get(pk = record_id)
     if record:
-        record.statu = DeployRecord.UPLOADED
+        record.status = DeployRecord.UPLOADED
         record.deploy_item = item
         record.save()
         
