@@ -1164,11 +1164,11 @@ def _get_reset_ts_tuple():
     default_ts = '19000101235959'
     try:
         # 一个也没有的时候会报错，实在不清楚django下这种情况怎么处理
-        cur_static_ts = ResetInfo.objects.filter(reset_type__exact = ResetInfo.TYPE_STATIC).order_by('-reset_time')[0].reset_source_ts
+        cur_static_ts = ResetInfo.objects.filter(reset_type__exact = ResetInfo.TYPE_STATIC, is_ignored = 0).order_by('-reset_time')[0].reset_source_ts
     except:
         cur_static_ts = default_ts
     try:
-        cur_ajaxablesky_ts = ResetInfo.objects.filter(reset_type__exact = ResetInfo.TYPE_AJAXABLESKY).order_by('-reset_time')[0].reset_source_ts
+        cur_ajaxablesky_ts = ResetInfo.objects.filter(reset_type__exact = ResetInfo.TYPE_AJAXABLESKY, is_ignored = 0).order_by('-reset_time')[0].reset_source_ts
     except:
         cur_ajaxablesky_ts = default_ts
     return (cur_static_ts, cur_ajaxablesky_ts)
@@ -1217,15 +1217,12 @@ def obtain_reset_item(request):
     local_source_path = local_folderpath + source_filename  # 本地文件源路径
     if not os.path.isdir(local_folderpath):
         os.makedirs(local_folderpath)
-    # 清除3天以前的文件
-    three_days_ago = datetime.now() - timedelta(days = 3)
-    tda_ts = datetime.strftime(three_days_ago, '%Y%m%d%H%M%S')
+    # 清除文件夹中的原有内容
     for filename in os.listdir(local_folderpath):
-        if not _is_new_backup_source(filename, tda_ts, '.tar.gz'):
-            try:
-                os.remove(local_source_path + filename)
-            except:
-                pass    # 理论上不会沦落到这一行
+        try:
+            os.remove(local_folderpath + filename)
+        except:
+            pass    # 理论上不会沦落到这一行
         
     conn.sftp.chdir(path = BACKUP_ROOT_PATH + 'www-baseline/compress/')
     try: 
@@ -1271,6 +1268,21 @@ def obtain_reset_item(request):
         'size': os.path.getsize(local_source_path),
     }))
 
+@login_required
+def read_file_size(request):
+    filepath = request.GET.get('filepath')
+    if not filepath or not os.path.exists(filepath):
+        return HttpResponse(json.dumps({
+            'isSuccess': False,
+            'errorMsg': '文件路径有误或文件不存在!'
+        }))
+    return HttpResponse(json.dumps({
+        'isSuccess': True,
+        'filepath': filepath,
+        'size': os.path.getsize(filepath)
+    }))
+
+@login_required
 def ignore_reset_record(request):    
     record_id = int(request.POST.get('recordId')) or 0
     if not record_id:

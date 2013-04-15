@@ -42,6 +42,9 @@
 	.reset {
 		background-color: #0df;
 	}
+	.reset_ignored {
+		background-color: #ff8;
+	}
 </style>
 {% endblock %}
 
@@ -216,6 +219,9 @@ $(function(){
 			{% endif %}
 			{% if record.status == 'reset_success'%}
 				class="reset"
+			{% endif %}
+			{% if record.status == 'reset_ignored'%}
+				class="reset_ignored"
 			{% endif %}
 			>
 				<td>{{record.id}}</td>

@@ -152,7 +152,7 @@ class ResetInfo(models.Model):
     deploy_record = models.ForeignKey(DeployRecord)
     deploy_item = models.ForeignKey(DeployItem)
     reset_type = models.TextField(max_length = 30)
-    is_ignored = models.BooleanField(default = False)
+    is_ignored = models.BooleanField(default = 0)
     class Meta:
         db_table = 'dpl_reset_info'
         

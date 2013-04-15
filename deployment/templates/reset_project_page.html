@@ -125,22 +125,30 @@ $(function(){
 	$('#obtainResetItemBtn').click(function(){
 		var $this = $(this);
 		$this.attr({disabled: true});
+		var isFinished = false;
+		var sourceFilename = $('#sourceFilename').val();
+		if(!sourceFilename) {
+			alert('请选择备份源!');
+			return;
+		}
+		$('#obtainResult').html('');
+		var sizeUnits = ['byte', 'kb', 'MB', 'GB'];
 		$.post('/obtainResetItem/', {
 			projId: '{{project.id}}',
 			recordId: '{{record.id}}',
 			version: '{{version}},',
-			sourceFilename: $('#sourceFilename').val()
+			sourceFilename: sourceFilename
 		}, function(data){
 			var result = null;
 			try{
 				result = $.parseJSON(data);
 			} catch(e) {}
-			
+			isFinished = true;
+			$('#curFileSize').html('');
 			if(!result || result.isSuccess !== true) {
 				$('#obtainResult').html(result.errorMsg).css({color: 'red'});
 				alert('备份源获取失败！');
 			} else {
-				var sizeUnits = ['byte', 'kb', 'MB', 'GB']
 				var size = result.size;
 				for(i=0; i <=sizeUnits.length && size > 1024; size = (size/1024).toFixed(2), i++);
 				var sizeStr = size + sizeUnits[i];
@@ -148,7 +156,30 @@ $(function(){
 				alert('备份源获取成功!');
 			}
 			$this.attr({disabled: false});
-		})
+		});
+		readFileSize();
+		function readFileSize(){
+			$.get('/readFileSize/', {
+				filepath: '/d/content/web-app-bak/ableskyapps/backupsources/' + sourceFilename
+			}, function(data){
+				if(isFinished === true) {
+					return;
+				}
+				var result = null;
+				try {
+					result = $.parseJSON(data);
+				} catch(e) {}
+				if(result && result.isSuccess === true) {
+					var size = result.size;
+					for(i=0; i <=sizeUnits.length && size > 1024; size = (size/1024).toFixed(2), i++);
+					var sizeStr = size + sizeUnits[i];
+					$('#curFileSize').html('[' + sourceFilename +'][' + sizeStr + ']');
+				}
+			});
+			if(isFinished !== true){
+				setTimeout(readFileSize, 500);
+			}
+		}
 	});
 	
 	$('#startResetBtn').click(function(){
@@ -347,6 +378,7 @@ $(function(){
 				<input type="hidden" value="" id="sourceFilename" />
 				<input type="button" value="获取备份源" id="obtainResetItemBtn" />
 				<span style="font-size: 20px;" id="obtainResult"></span>
+				<span style="font-size: 20px;" id="curFileSize"></span>
 			</div>
 		</div>
 		<div class="sect_wrap">
