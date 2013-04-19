@@ -32,6 +32,32 @@ $(function(){
 			}
 		});
 	});
+	// 如果测试环境未基于最新的备份源，则在页面上进行闪烁提示
+	$.getJSON('/hasNewBackupSourceForCurrentEnv/', function(data){
+		if(!data || !data.hasNew) {
+			return;
+		}
+		$('#tipWrap').show();
+		var blink = (function($blinkContent){
+			var targetOpacity = 1;
+			var blinkExec = function(){
+				targetOpacity = (targetOpacity + 1) % 2;
+				$blinkContent.animate({
+					opacity: targetOpacity,
+					easing: 'linear'
+				}, 500, function(){
+					if(targetOpacity == 1){
+						setTimeout(blinkExec, 300);
+					} else {
+						blinkExec();
+					}
+				});
+			}
+			return blinkExec;
+		})($('#tipContent'));
+		blink();
+	});
+	
 });
 </script>
 {% block native_js %}{% endblock %}
@@ -47,6 +73,11 @@ $(function(){
 		<a href="/login">登录</a> |
 		<a href="/register">注册</a>
 	{% endif %}
+</div>
+<div id="tipWrap" style="padding-top: 25px; text-align: center; color: red; display: none; margin-bottom: -94px;">
+	<h2 id="tipContent">
+		在补丁上线前，请务必用最新备份源【重置】当前测试环境，并重新发布补丁进行测试！
+	</h2>
 </div>
 {% block content %}{% endblock %}
 </body>
