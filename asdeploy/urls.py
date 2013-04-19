@@ -56,7 +56,7 @@ urlpatterns = patterns('',
     (r'^obtainResetItem/$', obtain_reset_item),     # 从backup的服务器上获取指定的数据源
     (r'^ignoreResetRecord/$', ignore_reset_record), # 忽略已成功的reset发布
     (r'^readFileSize/$', read_file_size),           # 获取本地路径下文件的大小
-    
+    (r'^hasNewBackupSourceForCurrentEnv/$', has_new_backup_source_for_current_env),
     
     #检查硬盘挂载情况
     (r'^checkServerStatusForProject/(?P<project_name>[\w-]+)/$', check_server_status_for_project),

@@ -441,6 +441,23 @@ def start_rollback(request):
         }
     return HttpResponse(json.dumps(params))
 
+def _check_backup_source_before_group_deploy():
+    # 如果最新的backup源不是本环境产生的，则在发布补丁组之前，需要先进行重置发布
+    latest_ajaxablesky_source, latest_static_source = _get_latest_new_backup_source_tuple()
+    print latest_ajaxablesky_source
+    print latest_static_source
+    if latest_ajaxablesky_source is not None and latest_ajaxablesky_source.find(ENVIRONMENT) < 0 \
+            or latest_static_source is not None and latest_static_source.find(ENVIRONMENT) < 0:
+        return False
+    return True
+
+# 查看当前环境是否需要reset
+def has_new_backup_source_for_current_env(request):
+    return HttpResponse(json.dumps({
+        'hasNew': not _check_backup_source_before_group_deploy()
+    }))
+    
+
 @login_required
 def start_deploy(request):
     # 检查是否拥有当前的发布锁
@@ -466,6 +483,8 @@ def start_deploy(request):
             error_msg = '尚未上传文件'
         elif cache.get('log_is_writing_' + record_id_str):
             error_msg = '发布仍在继续中...'
+        elif deploy_direct == 'backup' and not _check_backup_source_before_group_deploy():
+            error_msg = '需要先使用最新的备份源进行重置发布!'
         else:
             set_server_group(server_group=server_group)
             log_reader = LogReader()
@@ -1133,6 +1152,24 @@ def get_new_backup_source_list(request):
             'isSuccess': False,
             'errorMsg': '未能成功链接备份源的服务器!',
         }))
+        
+def _get_latest_new_backup_source_tuple():
+    source_list = _get_new_backup_source_list()
+    latest_ajaxablesky_source = None
+    latest_static_source = None
+    # 从已排序的文件名中找出最新的源
+    for filename in source_list:
+        if latest_ajaxablesky_source and latest_static_source:
+            break
+        if latest_ajaxablesky_source is None and filename.find('ajaxablesky') >= 0:
+            latest_ajaxablesky_source = filename
+            continue
+        if latest_static_source is None and filename.find('static') >= 0:
+            latest_static_source = filename
+            continue
+    return (latest_ajaxablesky_source, latest_static_source)
+            
+        
 
 def _get_new_backup_source_list():
     conn = SimpleConnector(server_address = BACKUP_SERVER_IP)
@@ -1158,7 +1195,6 @@ def _get_new_backup_source_list():
         reverse = True
     )
     return new_backup_source_list
-
 
 def _get_reset_ts_tuple():
     default_ts = '19000101235959'
