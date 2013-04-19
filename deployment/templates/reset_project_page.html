@@ -198,6 +198,10 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			}else{
+				// 如果当前页面reset已启动，则不能再更换备份源
+				$('#obtainResetItemBtn').unbind('click').click(function(){
+					alert('本次发布流程已启动，无法再更改备份源文件!');
+				}); 
 				$('#startResetBtn').val('重置发布中').attr({disabled: true});
 				$('#deployStatus').html('重置发布启动成功').css({color: 'green'});
 				$('#logContent').val('');

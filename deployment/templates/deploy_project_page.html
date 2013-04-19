@@ -280,6 +280,10 @@ $(function(){
 	});
 	
 	$('#startBackupBtn').click(function(){
+		var $this = $(this);
+		$('#startDeployBtn').attr({disabled: true});
+		$('#startRollbackBtn').attr({disabled: true});
+		$this.val('补丁组发布中').attr({disabled: true});
 		$.post('/startDeploy/', {
 			recordId: '{{record.id}}',
 			deployType: '{{deployType}}',
@@ -296,9 +300,6 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			} else {
-				$('#startDeployBtn').attr({disabled: true});
-				$('#startRollbackBtn').attr({disabled: true});
-				$('#startBackupBtn').val('补丁组发布中').attr({disabled: true});
 				$('#deployStatus').html('补丁组发布启动成功').css({color: 'green'});
 				$('#logContent').val('');
 			}
@@ -352,6 +353,10 @@ $(function(){
 	});
 	
 	$('#startDeployBtn').click(function(){
+		var $this = $(this);
+		$this.val('发布中').attr({disabled: true});
+		$('#startRollbackBtn').attr({disabled: true});
+		$('#startBackupBtn').attr({disabled: true});
 		$.post('/startDeploy/', {
 			recordId: '{{record.id}}',
 			deployType: '{{deployType}}',
@@ -368,9 +373,6 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			}else{
-				$('#startDeployBtn').val('发布中').attr({disabled: true});
-				$('#startRollbackBtn').attr({disabled: true});
-				$('#startBackupBtn').attr({disabled: true});
 				$('#deployStatus').html('发布启动成功').css({color: 'green'});
 				$('#logContent').val('');
 			}
@@ -428,6 +430,9 @@ $(function(){
 	}
 	$('#startRollbackBtn').click(function(){
 		var $this = $(this);
+		$this.val('回滚中').attr({disabled: true});
+		$('#startDeployBtn').attr({disabled: true});
+		$('#startBackupBtn').attr({disabled: true});
 		$.post('/startRollback/', {
 			recordId: '{{record.id}}',
 			deployType: '{{deployType}}',
@@ -443,9 +448,6 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			}else{
-				$this.val('回滚中').attr({disabled: true});
-				$('#startDeployBtn').attr({disabled: true});
-				$('#startBackupBtn').attr({disabled: true});
 				$('#deployStatus').html('回滚启动成功').css({color: 'green'});
 				$('#logContent').val('');
 			}
