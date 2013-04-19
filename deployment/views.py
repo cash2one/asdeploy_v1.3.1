@@ -444,8 +444,6 @@ def start_rollback(request):
 def _check_backup_source_before_group_deploy():
     # 如果最新的backup源不是本环境产生的，则在发布补丁组之前，需要先进行重置发布
     latest_ajaxablesky_source, latest_static_source = _get_latest_new_backup_source_tuple()
-    print latest_ajaxablesky_source
-    print latest_static_source
     if latest_ajaxablesky_source is not None and latest_ajaxablesky_source.find(ENVIRONMENT) < 0 \
             or latest_static_source is not None and latest_static_source.find(ENVIRONMENT) < 0:
         return False
