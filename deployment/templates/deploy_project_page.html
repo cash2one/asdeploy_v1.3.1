@@ -763,7 +763,7 @@ $(function(){
 					<input type="button" value="发布" id="startDeployBtn" _disabled="disabled"/>
 					<input type="button" value="回滚" id="startRollbackBtn" _disabled="disabled"/>
 					{% if patchGroup and patchGroup.status == 'testing' %}
-						{% if user.id == patchGroup.creator.id or user.is_superuser %}
+						{% if user.is_superuser %}
 						<input type="button" value="补丁组发布" id="startBackupBtn" _disabled="disabled"/>
 						{% endif %}
 					{% endif %}

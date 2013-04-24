@@ -207,8 +207,8 @@ def _get_patch_sh_path_by_item(item):
 def trim_compress_suffix(filename):
     if not filename or len(filename) == 0:
         return filename
-    filename = filename.lower()
-    rindex = filename.rindex('.zip')
+    lower_filename = filename.lower()
+    rindex = lower_filename.rindex('.zip')
     if rindex > 0:
         filename = filename[:rindex]
     return filename
