@@ -9,3 +9,7 @@
 	font-size: 25px;
 	cursor: pointer;
 }
+
+table {
+	border-color: #ccc;
+}

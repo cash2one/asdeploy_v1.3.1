@@ -492,7 +492,7 @@ def start_deploy(request):
             record.status = DeployRecord.DEPLOYING
             record.save()
             # 如果是补丁，则要生成冲突信息
-            if record.deploy_item.deploy_type == DeployItem.PATCH:
+            if patch_group_id != 0 and record.deploy_item.deploy_type == DeployItem.PATCH:
                 _generate_conflict_detail_for_deploy_record(record, patch_group_id)
             params = {
                 'beginDeploy': True,
