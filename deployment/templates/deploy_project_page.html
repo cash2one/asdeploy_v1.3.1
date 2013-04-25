@@ -128,6 +128,8 @@ $(function(){
 			alert('请先选择要上传的文件!');
 			return false;
 		}
+		// static的情形只能发版本，上传tar.gz包
+		{% if project.name != 'as-static'%}
 		if('{{deployType}}' == 'patch' && !(/.zip$/i).test(deployItemName)){
 			alert('请选择zip压缩格式的补丁文件!');
 			return false;
@@ -136,6 +138,12 @@ $(function(){
 			alert('请选择war包进行上传!');
 			return false;
 		}
+		{% else %}
+		if(!(/.tar.gz/i).test(deployItemName)) {
+			alert('请注意，【static】工程只能上传tar.gz包发版本!!!\请不要发补丁!!!');
+			return false;
+		}
+		{% endif %}
 		$this.val('上传中').attr({disabled: true});
 		$.ajaxFileUpload({
 			url: '/uploadDeployItem/',
