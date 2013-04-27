@@ -38,6 +38,8 @@
 <script>
 $(function(){
 	
+	$('#list_tbl tbody tr').filter(':nth-child(2n)').css({backgroundColor: '#f8f8f8'});
+	
 	$('#project').val('{{query_params.project}}');
 	
 	// 新的查询，必须保证是第一页
@@ -162,34 +164,38 @@ function reloadPage(){
 		<div class="page_bar" id="page_bar" style="display:inline-block"></div>
 		<br/>
 		<table id="list_tbl" border="1" cellspacing="0">
-			<tr>
-				<th width="40">ID</th>
-				<!--th width="120">工程名称</th-->
-				<th width="180">补丁组名称</th>
-				<th width="100">标识码</th>
-				<th width="100">创建者</th>
-				<th width="180">创建时间</th>
-				<th width="180">完成时间</th>
-				<th width="100">状态</th>
-				<th>操作</th>
-			</tr>
-			{% for patch_group in patch_groups %}
-			<tr>
-				<td>{{patch_group.id}}</td>
-				<td>{{patch_group.name}}</td>
-				<td>{{patch_group.check_code}}</td>
-				<td>{{patch_group.creator.username}}</td>
-				<td>{{patch_group.formated_create_time}}</td>
-				<td>{{patch_group.formated_finish_time}}</td>
-				<td>{{patch_group.status}}</td>
-				<td>
-					<a href="/patchGroupDetail/{{patch_group.id}}/">详情</a>
-					{% if user.id == patch_group.creator.id or user.is_superuser %}
-					<a href="javascript:openSaveOrUpdatePatchGroupWindow({patchGroupId: '{{patch_group.id}}'});">修改</a>
-					{% endif %}
-				</td>
-			</tr>
-			{% endfor %}
+			<thead style="background-color: #ccc;">
+				<tr>
+					<th width="40">ID</th>
+					<!--th width="120">工程名称</th-->
+					<th width="180">补丁组名称</th>
+					<th width="100">标识码</th>
+					<th width="100">创建者</th>
+					<th width="180">创建时间</th>
+					<th width="180">完成时间</th>
+					<th width="100">状态</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for patch_group in patch_groups %}
+				<tr>
+					<td>{{patch_group.id}}</td>
+					<td>{{patch_group.name}}</td>
+					<td>{{patch_group.check_code}}</td>
+					<td>{{patch_group.creator.username}}</td>
+					<td>{{patch_group.formated_create_time}}</td>
+					<td>{{patch_group.formated_finish_time}}</td>
+					<td>{{patch_group.status}}</td>
+					<td>
+						<a href="/patchGroupDetail/{{patch_group.id}}/">详情</a>
+						{% if user.id == patch_group.creator.id or user.is_superuser %}
+						<a href="javascript:openSaveOrUpdatePatchGroupWindow({patchGroupId: '{{patch_group.id}}'});">修改</a>
+						{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
 		</table>
 	</div>
 </div>
