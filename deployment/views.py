@@ -491,9 +491,19 @@ def start_deploy(request):
             deployer.start()
             record.status = DeployRecord.DEPLOYING
             record.save()
-            # 如果是补丁，则要生成冲突信息
+            # 如果是有组的补丁，且不是backup，则要生成冲突信息
+            # backup的情形，只在上传时提示冲突，在发布时不记录冲突
             if patch_group_id != 0 and record.deploy_item.deploy_type == DeployItem.PATCH:
-                _generate_conflict_detail_for_deploy_record(record, patch_group_id)
+                # 先在item里存下patch_group的信息
+                patch_group = patch_group_id and PatchGroup.objects.get(pk = patch_group_id) or None
+                item = record.deploy_item
+                if patch_group:
+                    item.patch_group = patch_group
+                    item.save() 
+                # 如果是非backup的补丁发布，则生成冲突信息
+                if deploy_direct != 'backup':
+                    _generate_conflict_detail_for_deploy_record(record, patch_group)
+                    
             params = {
                 'beginDeploy': True,
             }
@@ -549,12 +559,11 @@ def test_add_patch_file_to_group(request, patch_group_id):
     return HttpResponse('abc');
 
 def test_generate_conflict_detial_for_deploy_record(request):
-    record_id = 29
-    patch_group_id = 2;
-    record = DeployRecord.objects.get(pk = record_id)
-    patch_group = PatchGroup.objects.get(pk = patch_group_id)
-    _generate_conflict_detail_for_deploy_record(record, patch_group_id)
-    
+#    record_id = 29
+#    patch_group_id = 2;
+#    record = DeployRecord.objects.get(pk = record_id)
+#    patch_group = PatchGroup.objects.get(pk = patch_group_id)
+#    _generate_conflict_detail_for_deploy_record(record, patch_group_id)
     return HttpResponse('abc');
 
 ### 补丁组相关部分的代码 begin ###
@@ -562,14 +571,10 @@ def test_generate_conflict_detial_for_deploy_record(request):
 # 为每次发布的deploy_record生成相应的conflict_detail
 # record: 当前的发布记录
 # patch_group_id: 当前发布记录所对应的补丁组
-def _generate_conflict_detail_for_deploy_record(record = None, patch_group_id = 0):
+def _generate_conflict_detail_for_deploy_record(record = None, patch_group = None):
     if not record:
         return;
-    patch_group = patch_group_id and PatchGroup.objects.get(pk = patch_group_id) or None
     item = record.deploy_item
-    if patch_group:
-        item.patch_group = patch_group
-        item.save()
     unziped_folder = item.folder_path + trim_compress_suffix(item.file_name) + '/'
     file_list = _get_file_list(unziped_folder)
     file_list = _exclude_readme_from_file_list(file_list)
