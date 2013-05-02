@@ -106,7 +106,10 @@ function openSaveOrUpdatePatchGroupWindow(config){
 }
 
 function reloadPage(){
-	location.reload();
+	//location.reload();
+	var recordForm = $('#patch_group_query_form');
+	recordForm.submit();
+	return false;
 }
 </script>
 {% endblock %}
