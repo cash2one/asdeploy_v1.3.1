@@ -19,7 +19,41 @@
 <script src="/static_files/js/i18n/jquery.ui.datepicker-zh-CN.js"></script>
 <script type="text/javascript" src="/static_files/js/dplPageBar.js"></script>
 <script>
+$(function(){
+	initDateQueryFields();
+});
 
+function initDateQueryFields(){
+	$.datepicker.setDefaults($.datepicker.regional['zh-CN']);
+	var baseDatePickerOption = {
+		dateFormat: 'yy-mm-dd',
+		changeYear: true
+	};
+	$('#startTime').datepicker($.extend({}, baseDatePickerOption, {
+		onSelect: function(selectedDate){
+			var instance = $( this ).data( "datepicker" );
+			var date = $.datepicker.parseDate(
+				instance.settings.dateFormat || $.datepicker._defaults.dateFormat, 
+				selectedDate, 
+				instance.settings);
+			$('#endTime').datepicker('option', {
+				minDate: date
+			});
+		}
+	}));
+	$('#endTime').datepicker($.extend({}, baseDatePickerOption,{
+		onSelect: function(selectedDate){
+			var instance = $( this ).data( "datepicker" );
+			var date = $.datepicker.parseDate(
+				instance.settings.dateFormat || $.datepicker._defaults.dateFormat, 
+				selectedDate, 
+				instance.settings);
+			$('#startTime').datepicker('option', {
+				maxDate: date
+			});
+		}
+	}));
+}
 </script>
 {% endblock %}
 
