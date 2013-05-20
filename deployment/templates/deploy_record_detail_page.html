@@ -1,37 +1,19 @@
 {% extends "base.html" %}
 {% block style %}
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/static_files/css/custom-theme/jquery-ui-1.10.0.custom.css"/>
 <style>
-	div.wrap {
-		text-align: center;
-		padding-top: 50px;
-	}
-	div.sect_wrap {
-		width: 750px;
-		margin: 0px auto 50px;
-	}
-	.sect_title {
-		float: left;
-		font-size: 20px;
-		font-weight: bold;
-	}
-	.sect_content {
-		margin: 0px auto;
-		overflow-y: scroll;
-		font-size: 15px;
-		width: 750px;
-		height: 300px;
-	}
-	div.basic_info h3 {
-		font-size: 20px;
-	}
-	
+.table thead {
+	background-color: #eee;
+}
 </style>
 {% endblock %}
 {% block native_js %}
+<script src="/static_files/js/bootstrap.min.js"></script>
+<script src="/static_files/js/jquery-ui-1.10.0.custom.min.js"></script>
 <script>
 $(function(){
 	highlightConflict();
-	
 	$('#ignoreResetBtn').click(function(){
 		if(!confirm('确认要忽略本次重置发布')){
 			return;
@@ -52,12 +34,12 @@ $(function(){
 
 function highlightConflict(){
 	var conflictDict = {}
-	$('#conflictTbl').children('tbody').find('tr td:nth-child(1) input').each(function(i, v){
-		conflictDict[v.value] = true;
+	$('#conflictTbl').children('tbody').find('tr td:nth-child(1)').each(function(i, v){
+		conflictDict[v.innerHTML] = true;
 	});
 	$('#fileListTbl').children('tbody').find('tr td:nth-child(1)').each(function(i, v){
 		if(conflictDict[v.innerHTML]){
-			v.style.backgroundColor = '#f88';
+			$(v).parent().addClass('error');
 		}
 	})
 }
@@ -65,8 +47,8 @@ function highlightConflict(){
 {% endblock %}
 {% block content %}
 <div class="wrap">
-	<h2>发布详情</h2>
-	<div class="basic_info">
+	<h2 style="text-align: center;">发布详情</h2>
+	<div style="width: 600px; text-align: center; margin: 10px auto 10px;">
 		<h3>发布者: {{record.user.username}}</h3>
 		<h3>发布类型: {{record.deploy_item.deploy_type}}</h3>
 		<h3>发布结果: {{record.status}}</h3>
@@ -76,78 +58,51 @@ function highlightConflict(){
 		<h3>所属补丁组：{{record.deploy_item.patch_group.name}}</h3>
 		{% endif%}
 		{% if record.status == 'reset_success' %}
-		<input type="button" value="重置忽略" id="ignoreResetBtn"/>
+		<button id="ignoreResetBtn" type="button" class="btn btn-primary">重置忽略</button>
 		{% endif %}
 	</div>
-	<div class="sect_wrap">
-		<div class="sect_title">
-			<label>readme</label>
-		</div>
-		<br/>
-		<textarea readonly="readonly" class="sect_content">{{readme}}</textarea>
-	</div>
 	
-	<div class="sect_wrap">
-		<div class="sect_title">
-			<label>发布文件列表</label>
-		</div>
-		<br/>
-		<!--textarea readonly="readonly" class="sect_content">{{file_list_content}}</textarea -->
-		<div style="padding-top: 20px;" id="fileListWrap">
-			<table id="fileListTbl" border="1" cellspacing="0" style="width: 750px; text-align: left">
-				<thead>
-					<tr><th>文件路径</th></tr>
-				</thead>
-				<tbody>
-				{% for file_path in file_list %}
-					<tr>
-						<td>{{file_path}}</td>
-					</tr>
-				{% endfor %}
-				</tbody>
-			</table>
-		</div>
+	<div style="width: 800px; margin: 10px auto 10px;">
+		<h3>README</h3>
+		<pre style="height: 300px; overflow: auto; font-size:15px;">{{readme}}</pre>
+		
+		<h3>发布文件列表</h3>
+		<table id="fileListTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 100%;">
+			<thead>
+				<tr><th>文件路径</th></tr>
+			</thead>
+			<tbody>
+			{% for file_path in file_list %}
+				<tr>
+					<td>{{file_path}}</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+		
+		{% if record.is_conflict_with_others and conflict_detail %}
+		<h3>文件冲突详情</h3>
+		<table id="conflictTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 100%;">
+			<thead>
+				<tr>
+					<th width="400">文件名</th>
+					<th width="60">类型</th>
+					<th width="150">冲突组名</th>
+					<th width="60">组状态</th>
+				</tr>
+			</thead>
+			<tbody>
+			{% for conflict_info in conflict_detail.conflict_infos.all %}
+				<tr>
+					<td>{{conflict_info.conflict_patch_file.file_path}}</td>
+					<td>{{conflict_info.conflict_patch_file.file_type}}</td>
+					<td>{{conflict_info.conflict_patch_group.name}}</td>
+					<td>{{conflict_info.conflict_patch_group.status}}</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+		{% endif %}
 	</div>
-	
-	{% if record.is_conflict_with_others and conflict_detail %}
-	<div class="sect_wrap">
-		<div class="sect_title" style="float:none; text-align: left; ">
-			<label>文件冲突详情</label>
-		</div>
-		<div>
-			<table id="conflictTbl" border="1" cellspacing="0">
-				<thead>
-					<tr>
-						<th width="380">文件名</th>
-						<th width="60">类型</th>
-						<th width="150">冲突组名</th>
-						<th width="90">组状态</th>
-					</tr>
-				</thead>
-				<tbody>
-				{% for conflict_info in conflict_detail.conflict_infos.all %}
-					<tr>
-						<td style="text-align: left;">
-							<input style="width: 375px; height: 100%; border: 0px" readOnly="true" value="{{conflict_info.conflict_patch_file.file_path}}"/>
-						</td>
-						<td>{{conflict_info.conflict_patch_file.file_type}}</td>
-						<td>{{conflict_info.conflict_patch_group.name}}</td>
-						<td>{{conflict_info.conflict_patch_group.status}}</td>
-					</tr>
-				{% endfor %}
-				</tbody>
-			</table>
-		</div>
-	</div>
-	{% endif %}
-	
-	<div class="sect_wrap"  style="display:none;">
-		<div class="sect_title">
-			<label>发布日志</label>
-		</div>
-		<br/>
-		<textarea readonly="readonly" class="sect_content"></textarea>
-	</div>
-
 </div>
 {% endblock %}
