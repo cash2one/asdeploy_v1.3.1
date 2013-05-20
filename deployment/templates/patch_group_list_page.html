@@ -23,6 +23,7 @@
 $(function(){
 	initQueryArea();
 	initPageBar();
+	$('#createNewBtn').click(openSaveOrUpdatePatchGroupWindow);
 });
 
 function initQueryArea() {
@@ -167,8 +168,13 @@ function reloadPage(){
 	<hr/>
 	
 	<div style="width:1250px; margin: 10px auto 20px;">
-		<div>
-			<div id="pageBar" style="margin-top: 5px;"></div>
+		<div class="row-fluid">
+			<div class="span2">
+				<button id="createNewBtn" class="btn btn-primary" style="margin-top:22px; width: 80px;">新&nbsp;&nbsp;增</button>
+			</div>
+			<div class="span10">
+				<div id="pageBar"></div>
+			</div>
 		</div>
 		
 		<div class="row-fluid">
