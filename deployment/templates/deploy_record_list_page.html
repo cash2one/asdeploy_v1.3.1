@@ -20,8 +20,37 @@
 <script type="text/javascript" src="/static_files/js/dplPageBar.js"></script>
 <script>
 $(function(){
-	initDateQueryFields();
+	initQueryArea();
 });
+
+function initQueryArea(){
+	initDateQueryFields();
+	
+	$('#project').val('{{query_params.project}}');
+	$('#deployType').val('{{query_params.deploy_type}}');
+	
+	// 新的查询，必须保证是第一页
+	$('#queryBtn').click(function(){
+		var recordForm = $('#deploy_record_query_form');
+		recordForm.attr({action: '/deployRecordList/1/'});
+		recordForm.submit();
+		return false;
+	});
+	
+	// 清除查询条件，必须保证是第一页
+	$('#clearQueryBtn').click(function(){
+		$('#username').val('');
+		$('#deployType').val('');
+		$('#project').val(0);
+		$('#version').val('');
+		$('#startTime').val('');
+		$('#endTime').val('');
+		var recordForm = $('#deploy_record_query_form');
+		recordForm.attr({action: '/deployRecordList/1/'});
+		recordForm.submit();
+		return false;
+	});
+}
 
 function initDateQueryFields(){
 	$.datepicker.setDefaults($.datepicker.regional['zh-CN']);
@@ -62,7 +91,8 @@ function initDateQueryFields(){
 	<h2 style="text-align: center;">发布历史列表</h2>
 	
 	<div style="width: 700px; margin: 20px auto 10px;">
-		<form style="margin-bottom: 0px;">
+		<form id="deploy_record_query_form" style="margin-bottom: 0px;" action="." method="post">
+			{% csrf_token %}
 			<table style="width: 100%; margin: 0px auto;">
 				<tr>
 					<td style="text-align: right;">
@@ -129,9 +159,9 @@ function initDateQueryFields(){
 				</tr>
 				<tr>
 					<td colspan="4" style="text-align: center;">
-						<button type="submit" class="btn btn-primary" style="width: 82px;">&nbsp;查&nbsp;&nbsp;询&nbsp;</button>
+						<button id="queryBtn" type="button" class="btn btn-primary" style="width: 82px;">&nbsp;查&nbsp;&nbsp;询&nbsp;</button>
 						&nbsp;&nbsp;&nbsp;&nbsp;
-						<button type="button" class="btn">清除条件</button>
+						<button id="clearQueryBtn" type="button" class="btn">清除条件</button>
 					</td>
 				</tr>
 			</table>
