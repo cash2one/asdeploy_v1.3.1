@@ -75,8 +75,8 @@ function initPageBar(){
 // 弹出新增，修改页面
 function openSaveOrUpdatePatchGroupWindow(config){
 	var config = config || {};
-	var width = config.width || 400,
-		height = config.height || 250;
+	var width = config.width || 450,
+		height = config.height || 330;
 	var screenWidth = window.screen.availWidth,
 		screenHeight = window.screen.availHeight,
 		left = (screenWidth - width) / 2,
@@ -170,10 +170,10 @@ function reloadPage(){
 	<div style="width:1250px; margin: 10px auto 20px;">
 		<div class="row-fluid">
 			<div class="span2">
-				<button id="createNewBtn" class="btn btn-primary" style="margin-top:22px; width: 80px;">新&nbsp;&nbsp;增</button>
+				<button id="createNewBtn" class="btn btn-primary" style="width: 80px;">新&nbsp;&nbsp;增</button>
 			</div>
 			<div class="span10">
-				<div id="pageBar"></div>
+				<div id="pageBar" style="margin-top: 0px;"></div>
 			</div>
 		</div>
 		

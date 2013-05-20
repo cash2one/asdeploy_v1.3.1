@@ -5,6 +5,8 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title></title>
 <link style="text/css" rel="stylesheet" href="/static_files/css/style.css" />
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/static_files/css/custom-theme/jquery-ui-1.10.0.custom.css"/>
 <style>
 body {
 	margin: 0px;
@@ -12,20 +14,16 @@ body {
 	overflow: hidden;
 }
 .wrap {
-	width: 400px;
-	height: 250px;
+	width: 450px;
+	height: 330px;
 	margin: 0px auto 0px;
 }
-#edit_area td {
-	width: 275px;
-	text-align: left;
-}
-#edit_area td.label {
-	width: 125px;
-	text-align: right;
+form label {
+	font-size: 18px;
 }
 </style>
 <script type="text/javascript" src="/static_files/js/jquery.js"></script>
+<script src="/static_files/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="/static_files/js/ajaxsetup_for_django.js"></script>
 <script>
 $(function(){
@@ -80,37 +78,36 @@ function getPatchGroupParams(){
 </head>
 <body>
 <div class="wrap">
-	<h2 style="text-align: center;">
+	<h2 style="text-align: center">
 		{% if not patch_group.id %}新增{% else %}修改{%endif%}补丁组
 	</h2>
-	<table id="edit_area">
-		{% if patch_group.id %}
-		<tr>
-			<td class="label">ID:</td>
-			<td>
-				<input type="hidden" id="id" name="id"/>
-				<input style="width: 200px;" disabled="disabled" value="{{patch_group.id}}"/>
-			</td>
-		</tr>
-		{% endif%}
-		<input type="hidden" id="projectId" name="projectId" value="1"/>
-		<tr>
-			<td class="label">补丁组名:</td>
-			<td>
-				<input name="name" id="name" style="width: 200px;" value="{{patch_group.name}}"/>
-			</td>
-		</tr>
-		<tr>
-			<td class="label">标识码:</td>
-			<td>
-				<input name="check_code" id="check_code" style="width: 200px;" value="{{patch_group.check_code}}"/>
-			</td>
-			
-		</tr>
-		<tr>
-			<td class="label">状态:</td>
-			<td>
-				<select name="status" id="status" style="width: 100px; font-size: 16px;">
+	<div style="margin-top:20px; margin-left:-10px;">
+		<form class="form-horizontal">
+			{% if patch_group.id %}
+			<div class="control-group">
+				<label class="control-label"><strong>ID:</strong></label>
+				<div class="controls">
+			    	<input disabled="disabled" type="text" name="id" id="id" value="{{patch_group.id}}">
+			    </div>
+			</div>
+			{% endif %}
+			<input type="hidden" id="projectId" name="projectId" value="1"/>
+			<div class="control-group">
+				<label class="control-label"><strong>补丁组名称:</strong></label>
+				<div class="controls">
+			    	<input type="text" name="name" id="name" value="{{patch_group.name}}">
+			    </div>
+			</div>
+			<div class="control-group">
+				<label class="control-label"><strong>标识码:</strong></label>
+				<div class="controls">
+			    	<input type="text" name="check_code" id="check_code"  value="{{patch_group.check_code}}">
+			    </div>
+			</div>
+			<div class="control-group">
+				<label class="control-label"><strong>状态:</strong></label>
+				<div class="controls">
+			    	<select name="status" id="status" style="width: 100px; font-size: 16px;">
 					{% if not patch_group.id %}
 					<option value="created">创建</option>
 					{% endif %}
@@ -119,15 +116,16 @@ function getPatchGroupParams(){
 					<option value="stoped">停止</option>
 					{% endif %}
 				</select>
-			</td>
-		</tr>
-		<tr>
-			<td colspan="2" style="text-align: center;">
-				<input type="button" value=" 提交 " style="font-size:16px; margin-top: 15px;" id="submitBtn"/>
-			</td>
-		</tr>
-	</table>
-	
-</div>
+			    </div>
+			</div>
+			<div class="control-group">
+				<div class="controls">
+					<button type="button" class="btn btn-primary" id="submitBtn">&nbsp;提&nbsp;&nbsp;交&nbsp;</button>
+				</div>
+			</div>
+		</form>
+		
+	</div>
+</div>	
 </body>
 </html>

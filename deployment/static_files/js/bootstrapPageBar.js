@@ -13,7 +13,7 @@
 	$.fn.bootstrapPageBar.defaults = {
 		curPageNum: 1,
 		totalPageNum: 1,
-		pageSize: 20,
+		pageSize: 20,	// 没有用了
 		maxBtnNum: 15,
 		siblingBtnNum: 2,
 		paginationCls: '',
