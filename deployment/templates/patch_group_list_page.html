@@ -1,46 +1,33 @@
 {% extends "base.html" %}
 {% block style %}
-<link type="text/css" rel="stylesheet" href="/static_files/css/dplPageBar.css"/>
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/static_files/css/custom-theme/jquery-ui-1.10.0.custom.css"/>
 <style>
-	div.wrap {
-		text-align: center;
-		padding-top: 50px;
-	}
-	div.query_area {
-		width: 500px;
-		margin: 0px auto;
-	}
-	div.query_area table {
-		width: 100%
-	}
-	div.query_area td {
-		text-align: left;
-	}
-	div.query_area td.label {
-		text-align: right;
-	}
-	div.query_area select {
+	form label {
 		font-size: 16px;
-		width: 155px;
 	}
-	div.list_area {
-		width: 1100px;
-		margin: 30px auto 50px;
+	.table th, .table td {
+		text-align: center;
 	}
-	#list_tbl {
-		width: 100%;
+	.table thead {
+		background-color: #eee;
 	}
 </style>
 {% endblock %}
 
 {% block native_js %}
-<script type="text/javascript" src="/static_files/js/dplPageBar.js"></script>
+<script src="/static_files/js/bootstrap.min.js"></script>
+<script src="/static_files/js/jquery-ui-1.10.0.custom.min.js"></script>
+<script type="text/javascript" src="/static_files/js/bootstrapPageBar.js"></script>
 <script>
 $(function(){
-	
-	$('#list_tbl tbody tr').filter(':nth-child(2n)').css({backgroundColor: '#f8f8f8'});
-	
+	initQueryArea();
+	initPageBar();
+});
+
+function initQueryArea() {
 	$('#project').val('{{query_params.project}}');
+	$('#status').val('{{query_params.status}}');
 	
 	// 新的查询，必须保证是第一页
 	$('#queryBtn').click(function(){
@@ -61,30 +48,28 @@ $(function(){
 		recordForm.submit();
 		return false;
 	});
-	
-	// 初始化page bar
+}
+
+function initPageBar(){
 	var totalPage = parseInt('{{query_params.totalPage}}');
 	isNaN(totalPage) && (totalPage = 1);
 	var curPage = parseInt('{{query_params.curPage}}');
-	isNaN(curPage) && (curPage = 1)
-	var numPerPage = parseInt('{{query_params.numPerPage}}');
-	isNaN(numPerPage) && (numPerPage = 20);
-	new PageBar({
-		totalPage: totalPage,
-		pageBar: 'page_bar',
-		curPageSiblingBtnNum: 3,
-		curPage: curPage,
-		numPerPage: numPerPage,
-		maxBtnNum: 10,
-		clickBtn: function(index){
+	isNaN(curPage) && (curPage = 1);
+	$('#pageBar').bootstrapPageBar({
+		curPageNum: curPage,
+		totalPageNum: totalPage,
+		maxBtnNum: 15,
+		pageSize: 20,
+		siblingBtnNum: 3,
+		paginationCls: 'pagination-right',
+		click: function(i, pageNum){
 			var recordForm = $('#patch_group_query_form');
-			recordForm.attr({action: '/patchGroupList/'+ index + '/'});
+			recordForm.attr({action: '/patchGroupList/'+ pageNum + '/'});
 			recordForm.submit();
 			return false;
 		}
 	});
-	
-});
+}
 
 // 弹出新增，修改页面
 function openSaveOrUpdatePatchGroupWindow(config){
@@ -106,7 +91,6 @@ function openSaveOrUpdatePatchGroupWindow(config){
 }
 
 function reloadPage(){
-	//location.reload();
 	var recordForm = $('#patch_group_query_form');
 	recordForm.submit();
 	return false;
@@ -116,90 +100,121 @@ function reloadPage(){
 
 {% block content %}
 <div class="wrap">
-	<h2>补丁组列表</h2>
-	<div class="query_area">
-		<form method="post" action="." id="patch_group_query_form">
+	<h2 style="text-align: center;">补丁组列表</h2>
+	
+	<div style="width: 700px; margin: 20px auto 10px;">
+		<form id="patch_group_query_form" style="margin-bottom: 0px;" action="." method="post">
 			{% csrf_token %}
-			<table id="query_tbl">
+			<table style="width: 100%; margin: 0px auto;">
 				<tr>
-					<td class="label">创建者:</td>
-					<td>
-						<input name="creatorName" id="creatorName" value="{{query_params.creatorName}}"/>
+					<td style="text-align: right; width: 25%;">
+						<label>
+							<strong>创建者:&nbsp;</strong>
+						</label>
 					</td>
-					<td class="label">补丁组名:</td>
+					<td style="width: 25%;">	
+						<input id="creatorName" name="creatorName" type="text" class="input-medium" value="{{query_params.creatorName}}" />
+					</td>
+					<td style="text-align: right;">
+						<label>
+							<strong>补丁组名:&nbsp;</strong>
+						</label>
+					</td>
 					<td>
-						<input name="patchGroupName" id="patchGroupName" value="{{query_params.patchGroupName}}"/>
+						<input id="patchGroupName" name="patchGroupName" type="text" class="input-medium" value="{{query_params.patchGroupName}}" />
 					</td>
 				</tr>
 				<tr>
-					<td class="label">工程:</td>
+					<td style="text-align: right;">
+						<label>
+							<strong>工程:&nbsp;</strong>
+						</label>
+					</td>
 					<td>
-						<select name="project" id="project">
+						<select name="project" id="project" class="input-medium" style="width:160px;">
 							<option value="0">全部</option>
-							{% for prj in projects %}
-								<option value="{{prj.id}}">{{prj.name}}</option>
+							{% for project in projects %}
+								<option value="{{project.id}}">{{project.name}}</option>
 							{% endfor%}
 						</select>
 					</td>
-					<td class="label">状态:</td>
+					<td style="text-align: right;">
+						<label>
+							<strong>状态:&nbsp;</strong>
+						</label>
+					</td>
 					<td>
-						<input name="status" id="status" value="{{query_params.status}}"/>
+						<select name="status" id="status" class="input-medium" style="width:160px;">
+							<option value="">全部</option>
+							<option value="created">已创建</option>
+							<option value="testing">测试中</option>
+							<option value="stoped">已停止</option> <!-- 把stoped当做完成吧 -->
+							<option value="finished">已终结</option>
+						</select>
 					</td>
 				</tr>
 				<tr>
 					<td colspan="4" style="text-align: center;">
-						<input type="button" value="  查询  " style="font-size:15px;" id="queryBtn"/>
-						&nbsp;
-						<input type="button" value="清空条件" style="font-size:15px;" id="clearQueryBtn"/>
+						<button id="queryBtn" type="button" class="btn btn-primary" style="width: 82px;">&nbsp;查&nbsp;&nbsp;询&nbsp;</button>
+						&nbsp;&nbsp;&nbsp;&nbsp;
+						<button id="clearQueryBtn" type="button" class="btn">清除条件</button>
 					</td>
 				</tr>
 			</table>
 		</form>
 	</div>
 	
-	<hr>
+	<hr/>
 	
-	<div class="list_area">
-		<div style="font-size:16px; float:left; padding-top: 10px;">
-			<a style="font-weight: bold; text-decoration: none" href="javascript:openSaveOrUpdatePatchGroupWindow();">+新增</a>
+	<div style="width:1250px; margin: 10px auto 20px;">
+		<div>
+			<div id="pageBar" style="margin-top: 5px;"></div>
 		</div>
-<!-- 		<a style="font-size:16px; font-weight: bold; float:left;">新增</a> -->
-		<div class="page_bar" id="page_bar" style="display:inline-block"></div>
-		<br/>
-		<table id="list_tbl" border="1" cellspacing="0">
-			<thead style="background-color: #ccc;">
-				<tr>
-					<th width="40">ID</th>
-					<!--th width="120">工程名称</th-->
-					<th width="180">补丁组名称</th>
-					<th width="100">标识码</th>
-					<th width="100">创建者</th>
-					<th width="180">创建时间</th>
-					<th width="180">完成时间</th>
-					<th width="100">状态</th>
-					<th>操作</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for patch_group in patch_groups %}
-				<tr>
-					<td>{{patch_group.id}}</td>
-					<td>{{patch_group.name}}</td>
-					<td>{{patch_group.check_code}}</td>
-					<td>{{patch_group.creator.username}}</td>
-					<td>{{patch_group.formated_create_time}}</td>
-					<td>{{patch_group.formated_finish_time}}</td>
-					<td>{{patch_group.status}}</td>
-					<td>
-						<a href="/patchGroupDetail/{{patch_group.id}}/">详情</a>
-						{% if user.id == patch_group.creator.id or user.is_superuser %}
-						<a href="javascript:openSaveOrUpdatePatchGroupWindow({patchGroupId: '{{patch_group.id}}'});">修改</a>
-						{% endif %}
-					</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
+		
+		<div class="row-fluid">
+			<div class="span12">
+				<table class="table table-bordered table-condensed table-hover table-striped" style="width: 100%;">
+					<thead>
+						<tr>
+							<th width="40">ID</th>
+							<!--th width="120">工程名称</th-->
+							<th width="220">补丁组名称</th>
+							<th width="200">标识码</th>
+							<th width="100">创建者</th>
+							<th width="180">创建时间</th>
+							<th width="180">完成时间</th>
+							<th width="100">状态</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for patch_group in patch_groups %}
+						<tr>
+							<td>{{patch_group.id}}</td>
+							<td>{{patch_group.name}}</td>
+							<td>{{patch_group.check_code}}</td>
+							<td>{{patch_group.creator.username}}</td>
+							<td>{{patch_group.formated_create_time}}</td>
+							<td>{{patch_group.formated_finish_time}}</td>
+							<td>
+							{% if patch_group.status == 'created' %}已创建{% endif %}
+							{% if patch_group.status == 'testing' %}测试中{% endif %}
+							{% if patch_group.status == 'stoped' %}已停止{% endif %}
+							{% if patch_group.status == 'finished' %}已终结{% endif %}
+							</td>
+							<td>
+								<a href="/patchGroupDetail/{{patch_group.id}}/">详情</a>
+								{% if user.id == patch_group.creator.id or user.is_superuser %}
+								<a href="javascript:openSaveOrUpdatePatchGroupWindow({patchGroupId: '{{patch_group.id}}'});">修改</a>
+								{% endif %}
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
 	</div>
 </div>
+
 {% endblock %}
