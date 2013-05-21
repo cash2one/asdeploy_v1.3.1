@@ -48,15 +48,33 @@ function highlightConflict(){
 {% block content %}
 <div class="wrap">
 	<h2 style="text-align: center;">发布详情</h2>
-	<div style="width: 600px; text-align: center; margin: 10px auto 10px;">
-		<h3>发布者: {{record.user.username}}</h3>
-		<h3>发布类型: {{record.deploy_item.deploy_type}}</h3>
-		<h3>发布结果: {{record.status}}</h3>
-		<h3>上传文件名: </h3>
-		<h3>{{record.deploy_item.file_name}}</h3>
-		{% if record.deploy_item.patch_group %}
-		<h3>所属补丁组：{{record.deploy_item.patch_group.name}}</h3>
-		{% endif%}
+	<div style="width: 500px; text-align: center; margin: 30px auto 10px;">
+		<table class="table table-bordered">
+			<tbody>
+				<tr>
+					<td style="width: 120px;">发布者:</td>
+					<td>{{record.user.username}}</td>
+				</tr>
+				<tr>
+					<td>发布类型:</td>
+					<td>{{record.deploy_item.deploy_type}}</td>
+				</tr>
+				<tr>
+					<td>发布结果:</td>
+					<td>{{record.status}}</td>
+				</tr>
+				<tr>
+					<td>上传文件名:</td>
+					<td>{{record.deploy_item.file_name}}</td>
+				</tr>
+				{% if record.deploy_item.patch_group %}
+				<tr>
+					<td>所属补丁组:</td>
+					<td>{{record.deploy_item.patch_group.name}}</td>
+				</tr>
+				{% endif%}
+			</tbody>
+		</table>
 		{% if record.status == 'reset_success' %}
 		<button id="ignoreResetBtn" type="button" class="btn btn-primary">重置忽略</button>
 		{% endif %}

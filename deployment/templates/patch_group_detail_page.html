@@ -1,33 +1,16 @@
 {% extends "base.html" %}
 {% block style %}
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/static_files/css/custom-theme/jquery-ui-1.10.0.custom.css"/>
 <style>
-	div.wrap {
-		text-align: center;
-		padding-top: 50px;
-	}
-	div.sect_wrap {
-		width: 750px;
-		margin: 0px auto 50px;
-	}
-	.sect_title {
-		float: left;
-		font-size: 20px;
-		font-weight: bold;
-	}
-	.sect_content {
-		margin: 0px auto;
-		overflow-y: scroll;
-		font-size: 15px;
-		width: 750px;
-		height: 300px;
-	}
-	div.basic_info h3 {
-		font-size: 20px;
-	}
-	
+.table thead {
+	background-color: #eee;
+}
 </style>
 {% endblock %}
 {% block native_js %}
+<script src="/static_files/js/bootstrap.min.js"></script>
+<script src="/static_files/js/jquery-ui-1.10.0.custom.min.js"></script>
 <script>
 $(function(){
 	highlightConflict();
@@ -35,12 +18,12 @@ $(function(){
 
 function highlightConflict(){
 	var conflictDict = {}
-	$('#conflictTbl').children('tbody').find('tr td:nth-child(1) input').each(function(i, v){
-		conflictDict[v.value] = true;
+	$('#conflictTbl').children('tbody').find('tr td:nth-child(1)').each(function(i, v){
+		conflictDict[v.innerHTML] = true;
 	});
 	$('#fileListTbl').children('tbody').find('tr td:nth-child(1)').each(function(i, v){
 		if(conflictDict[v.innerHTML]){
-			v.style.backgroundColor = '#f88';
+			$(v).parent().addClass('error');
 		}
 	})
 }
@@ -48,70 +31,80 @@ function highlightConflict(){
 {% endblock %}
 {% block content %}
 <div class="wrap">
-	<h2>补丁组详情</h2>
-	<div class="basic_info">
-		<h3>补丁组名称: {{patch_group.name}}</h3>
-		<h3>工程: {{patch_group.project.name}}</h3>
-		<h3>创建者: {{patch_group.creator.username}}</h3>
-		<h3>标识码: {{patch_group.check_code}} </h3>
-		<h3>状态: {{patch_group.status}}</h3>
-		<h3>创建时间: {{patch_group.formated_create_time}}</h3>
-		<h3>完成时间: {{patch_group.formated_finish_time}}</h3>
+	<h2 style="text-align: center">补丁组详情</h2>
+	<div style="width: 400px; text-align: left; margin: 30px auto 10px;">
+		<table class="table table-bordered">
+			<tbody>
+				<tr>
+					<td>补丁组名称:</td>
+					<td>{{patch_group.name}}</td>
+				</tr>
+				<tr>
+					<td>工程:</td>
+					<td>{{patch_group.project.name}}</td>
+				</tr>
+				<tr>
+					<td>创建者:</td>
+					<td>{{patch_group.creator.username}}</td>
+				</tr>
+				<tr>
+					<td>标识码:</td>
+					<td>{{patch_group.check_code}}</td>
+				</tr>
+				<tr>
+					<td>状态:</td>
+					<td>{{patch_group.status}}</td>
+				</tr>
+				<tr>
+					<td>创建时间:</td>
+					<td>{{patch_group.formated_create_time}}</td>
+				</tr>
+				<tr>
+					<td>完成时间:</td>
+					<td>{{patch_group.formated_finish_time}}</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
 	
-	<div class="sect_wrap">
-		<div class="sect_title">
-			<label>已关联文件列表</label>
-		</div>
-		<br/>
-		<div style="padding-top: 20px;" id="fileListWrap">
-			<table id="fileListTbl" border="1" cellspacing="0" style="width: 750px; text-align: left">
-				<thead>
-					<tr><th>文件路径</th></tr>
-				</thead>
-				<tbody>
-				{% for patch_file in patch_group.patch_files.all %}
-					<tr>
-						<td>{{patch_file.file_path}}</td>
-					</tr>
-				{% endfor %}
-				</tbody>
-			</table>
-		</div>
+	<div style="width: 800px; margin: 10px auto 10px;">
+		<h3>已关联文件列表</h3>
+		<table id="fileListTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 100%;">
+			<thead>
+				<tr><th>文件路径</th></tr>
+			</thead>
+			<tbody>
+			{% for patch_file in patch_group.patch_files.all %}
+				<tr>
+					<td>{{patch_file.file_path}}</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+		
+		{% if patch_group_conflict_file_list %}
+		<h3>文件冲突详情</h3>
+		<table id="conflictTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 100%;">
+			<thead>
+				<tr>
+					<th width="400">文件名</th>
+					<th width="60">类型</th>
+					<th width="150">冲突组名</th>
+					<th width="60">组状态</th>
+				</tr>
+			</thead>
+			<tbody>
+			{% for conflict_file_info in patch_group_conflict_file_list %}
+				<tr>
+					<td>{{conflict_file_info.conflict_patch_file_path}}</td>
+					<td>{{conflict_file_info.conflict_patch_file_type}}</td>
+					<td>{{conflict_file_info.conflict_patch_group_name}}</td>
+					<td>测试中</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+		{% endif %}
 	</div>
-	
-	{% if patch_group_conflict_file_list %}
-	<div class="sect_wrap">
-		<div class="sect_title" style="float:none; text-align: left; ">
-			<label>文件冲突详情</label>
-		</div>
-		<div>
-			<table id="conflictTbl" border="1" cellspacing="0">
-				<thead>
-					<tr>
-						<th width="480">文件路径</th>
-						<th width="80">类型</th>
-						<th width="150">冲突组名</th>
-						<th width="90">组状态</th>
-					</tr>
-				</thead>
-				<tbody>
-				{% for conflict_file_info in patch_group_conflict_file_list %}
-					<tr>
-						<td style="text-align: left;">
-							<input style="width: 475px; height: 100%; border: 0px;" readOnly="true" value="{{conflict_file_info.conflict_patch_file_path}}" />
-						</td>
-						<td>{{conflict_file_info.conflict_patch_file_type}}</td>
-						<td>{{conflict_file_info.conflict_patch_group_name}}</td>
-						<td>testing</td>
-					</tr>
-				{% endfor %}
-				</tbody>
-			</table>
-		</div>
-	</div>
-	{% endif %}
-
-
 </div>
 {% endblock %}
