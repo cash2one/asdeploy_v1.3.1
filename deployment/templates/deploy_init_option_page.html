@@ -1,60 +1,41 @@
 {% extends "base.html" %}
 {% block style %}
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/static_files/css/custom-theme/jquery-ui-1.10.0.custom.css"/>
 <style>
-	div.wrap {
-		text-align: center;
-		padding-top: 50px;
-	}
-	div.wrap label {
-		font-size: 20px;
-	}
-	div.wrap select {
-		font-size: 20px;
-		width: 110px;
-	}
-	div.wrap input {
-		font-size: 18px;
-		width: 110px;
-	}
-	div.sub_wrap {
-		width: 300px;
-		margin: 0px auto 30px;
-	}
-	ul.option_wrap {
-		margin:0px auto;
-		padding: 0px;
-		width: 300px;
-		height: 300px;
-		list-style: none;
-		border: 1px solid #333;
-		overflow-y: auto;
-	}
-	ul.option_wrap li {
-		font-size: 20px;
-		padding: 10px;
-		margin: 0px;
-		cursor: pointer;
-	}
-	#submitBtn {
-		font-size: 20px;
-	}
-	.error_msg {
-		font-size: 20px;
-		color: red;
-	}
+.form-horizontal .control-label {
+	width: 140px;
+	font-size: 16px;
+}
+#optionWrap {
+	width: 320px; 
+	font-size: 16px; 
+	text-align: center; 
+	margin: 0px auto;
+}
+#optionWrap td {
+	text-align: center;
+	cursor: pointer;
+}
+
+#optionWrap td.active {
+	color: #fff;
+	font-weight: bold;
+	background-color: #ccc;
+}
 </style>
 {% endblock %}
 
 {% block native_js %}
+<script src="/static_files/js/bootstrap.min.js"></script>
+<script src="/static_files/js/jquery-ui-1.10.0.custom.min.js"></script>
+
 <script>
 $(function(){
-	$liArr = $('ul.option_wrap').children('li')
-		.filter(':nth-child(2n+1)').css({'backgroundColor': '#eee'})
-		.end();
-	$liArr.click(function(){
-		$liArr.css({backgroundColor: '', color: '', fontWeight: ''})
-			.filter(':nth-child(2n+1)').css({'backgroundColor': '#eee'});
-		var $this = $(this).css({backgroundColor: '#999', color: '#fff', fontWeight: 'bolder'});
+	$tdArr = $('#optionWrap td');
+	$tdArr.click(function(){
+		$tdArr.removeClass('active');
+		var $this = $(this).addClass('active');
 		var projectId = $this.children('input:first').val();
 		$('#project').val(projectId);
 		// 查看是否有补丁组
@@ -130,50 +111,60 @@ function submitCheck(){
 
 {% block content %}
 <div class="wrap">
-	<h2>请选择工程和发布环境</h2>
-	<div style="height: 25px; padding-top: 20px;">
+	<h2 style="text-align: center;">请选择工程和发布环境</h2>
+	<div style="width: 350px; height: 40px; margin:30px auto 0px;">
 		{% if error_msg %}
-		<span class="error_msg">{{error_msg}}</span>
+		<div class="alert alert-error" style="font-size: 16px;">
+			<button type="button" class="close" data-dismiss="alert">&times;</button>
+			{{error_msg}}
+		</div>
 		{% endif %}
 	</div>
-
-	<form method="post" action="." id="deployInitOptionForm">
-		{% csrf_token %}
-		<input type="hidden" value="" name="projId" id="project"/>
-		<div class="sub_wrap">
-			<label>发布类型:</label>
-			<select name="deployType" id="deployType">
-				<option value="">请选择...</option>
-				<option value="war">war包</option>
-				<option value="patch">补丁</option>
-				{% if has_new_backup_source %}
-				<option value="reset">重置</option>
-				{% endif %}
-			</select>
-		</div>
-		<div class="sub_wrap">
-			<label>版本号:</label>
-			<input id="version" name="version" />
-		</div>
-		<div class="sub_wrap">
-			<label>要发布的工程</label>
-			<br/>
-			<div>
-				<ul class='option_wrap'>
-					{% for project in projects %}
-						<li>
-							<input type="hidden" value="{{project.id}}"/>
-							{{ project.name }}
-						</li>
-					{% endfor %}
-				</ul>
+	<div style="width: 400px; margin: 10px auto;">
+		<form class="form-horizontal" method="post" action="." id="deployInitOptionForm">
+			{% csrf_token %}
+			<input type="hidden" value="" name="projId" id="project"/>
+			<div class="control-group">
+				<label class="control-label"><strong>发布类型:</strong></label>
+			    <div class="controls">
+			    	<select name="deployType" id="deployType" style="width:160px;">
+						<option value="">请选择...</option>
+						<option value="war">war包</option>
+						<option value="patch">补丁</option>
+						{% if has_new_backup_source %}
+						<option value="reset">重置</option>
+						{% endif %}
+					</select>
+			    </div>
 			</div>
-			<br/>
-		</div>
-		<div class="sub_wrap" style="display:none; margin-top: -20px;">
-			<select id="patchGroupSel" name="patchGroupId" style="width: 250px;"></select>
-		</div>
-		<input type="button" value="确定" id="submitBtn"/>
-	</form>
+			<div class="control-group">
+				<label class="control-label"><strong>版本号:</strong></label>
+			    <div class="controls">
+			    	<input type="text" class="input-medium" id="version" name="version" />
+			    </div>
+			</div>
+			<h3 style="text-align: center;">要发布的工程</h3>
+			<div>
+				<table id="optionWrap" class="table table-bordered table-striped table-hover">
+					<tbody>
+						{% for project in projects %}
+						<tr>
+							<td>
+								<input type="hidden" value="{{project.id}}"/>
+								{{ project.name }}
+							</td>
+						</tr>
+						{% endfor%}
+					</tbody>
+				</table>
+			</div>
+			<div style="text-align: center; display: none; margin-top: 30px;">
+				<select id="patchGroupSel" name="patchGroupId" style="width: 320px;"></select>
+			</div>
+			<div style="text-align: center; margin-top: 30px;">
+				<button type="button" class="btn btn-primary" id="submitBtn" style="width: 80px;">确&nbsp;&nbsp;定</button>
+			</div>
+		</form>
+	</div>
 </div>
 {% endblock %}
