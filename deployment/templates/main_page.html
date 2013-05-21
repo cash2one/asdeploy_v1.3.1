@@ -1,37 +1,17 @@
 {% extends "base.html" %}
 {% block style %}
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/static_files/css/custom-theme/jquery-ui-1.10.0.custom.css"/>
 <style>
-	div.wrap {
-		text-align: center;
-		padding-top: 50px;
-	}
-	ul.opt_list {
-		margin: 0px auto;
-		width: 300px;
-	}
-	ul.opt_list li{
-		list-style: none;
-		display: block;
-		width: 200px;
-		margin: 20px;
-		font-size: 20px;
-		float: left;
-	}
-	.lock_prompt {
-		font-size: 20px;
-		color: red;
-		font-weight: bolder;
-	}
-	.lock_prompt a {
-		color: red;
-	}
-	.lock_prompt input {
-		font-size: 18px;
-	}
+#mainBtn > a{
+	margin-bottom: 15px;
+}
 </style>
 {% endblock %}
 
 {% block native_js %}
+<script src="/static_files/js/bootstrap.min.js"></script>
+<script src="/static_files/js/jquery-ui-1.10.0.custom.min.js"></script>
 <script>
 $(function(){
 	$('#unlock_deploy_btn').click(function(){
@@ -42,39 +22,26 @@ $(function(){
 {% endblock %}
 
 {% block content %}
-	<div class="wrap">
-		<h1>welcome
-		{% if user %}{{user.username}}{% endif %}
-		</h1>
-		<div style="height: 80px">
-			{% if curLock %}
-				<span class="lock_prompt">
-					发布流程已被[{{curLock.user.username}}]锁定
-					{% if user.id == curLock.user.id or user.is_superuser %}
-						<br/><br/>
-						<input type="button" value="解锁" id="unlock_deploy_btn"/>
-					{% endif %}
-				</span>
-			{% endif %}
-		</div>
-		
-		<div>
-			<ul class="opt_list">
-				<li>
-					<a href="/deployInitOption/">新的发布</a>
-				</li>
-				<li>
-					<a href="/patchGroupList/1/">管理补丁组</a>
-				</li>
-				<li>
-					<a href="/deployRecordList/1/">查看发布历史</a>
-				</li>
-				<!--
-				<li>
-					<a href="/showOnlineFile/">编辑线上文件</a>
-				</li>
-				-->
-			</ul>
-		</div>
+<div class="wrap">
+	<div style="margin-top: 30px;">
+		<h1 style="text-align: center">welcome{% if user %} {{user.username}}{% endif %}</h1>
 	</div>
+	<div style="width: 400px; height: 100px;; margin: 30px auto 10px; text-align: center;">
+		{% if curLock %}
+			<div class="alert alert-error" style="font-size:16px;">
+			  发布流程已被<strong>zyang</strong>锁定
+			</div>
+			{% if user.id == curLock.user.id or user.is_superuser %}
+				<button id="unlock_deploy_btn" type="button" class="btn btn-primary">解锁</button>
+			{% endif %}
+		{% endif %}
+	</div>
+	<div id="mainBtn" style="width: 300px; margin: 10px auto 50px;">
+		<a type="button" class="btn btn-large btn-block" href="/deployInitOption/">新的发布</a>
+		<a type="button" class="btn btn-large btn-block" href="/patchGroupList/1/">管理补丁组</a>
+		<a type="button" class="btn btn-large btn-block" href="/deployRecordList/1/">查看发布历史</a>
+		<!-- 下面为已废弃的功能 -->
+		<!--a type="button" class="btn btn-large btn-block" href="/showOnlineFile/">编辑线上文件</a-->
+	</div>
+</div>
 {% endblock %}
