@@ -212,8 +212,9 @@ def deploy_record_list_page(request, page_num=1):
         if username:
             query_params['username'] = username
             conditions.append(Q(user__username__icontains = username))
-        proj_id = int(request.POST.get('project'))
-        if proj_id:
+        print request.POST.get('project')
+        proj_id = request.POST.get('project')
+        if proj_id and proj_id != '0':
             query_params['project'] = proj_id
             conditions.append(Q(project__id = proj_id))
         version = request.POST.get('version')
@@ -993,8 +994,8 @@ def patch_group_list_page(request, page_num=1):
         if creator_name:
             query_params['creatorName'] = creator_name
             conditions.append(Q(creator__username__icontains = creator_name))
-        proj_id = int(request.POST.get('project'))
-        if proj_id:
+        proj_id = request.POST.get('project')
+        if proj_id and proj_id != '0':
             query_params['project'] = proj_id
             conditions.append(Q(project__id = proj_id))
         status = request.POST.get('status')
