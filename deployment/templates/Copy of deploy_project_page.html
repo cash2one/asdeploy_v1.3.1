@@ -1,0 +1,792 @@
+{% extends "base.html" %}
+{% block style %}
+<link style="text/css" rel="stylesheet" href="/static_files/ztree/css/zTreeStyle.css"/>
+<style>
+	div.wrap {
+		text-align: center;
+		padding-top: 50px;
+		width: 800px;
+		margin: 0px auto;
+		position: relative;
+	}
+	div.sect_wrap {
+		width: 800px;
+		text-align: left;
+		margin: 0px auto 20px;
+	}
+	div.sect_wrap input {
+		font-size: 16px;
+	}
+	div.sect_wrap label {
+		display: inline-block;
+		width: 150px;
+		font-size: 20px;
+	}
+	div.sect_wrap textarea {
+		font-size: 20px;
+		width: 800px;
+		height: 200px;
+	}
+	ul.deploy_init_info {
+		list-style: none;
+		font-size: 20px;
+		margin: 0px;
+		padding: 0px;
+		display: inline-block;
+		width: 600px;
+	}
+	div.upload_area .desc {
+		font-size: 20px;
+	}
+	#deployItemField {
+		width: 400px;
+	}
+	#uploadDetailWrap {
+		display: none;
+	}
+	
+	#downloadProjectFileArea{
+		
+	}
+	
+	#fileTreeWrap{
+		height: 400px;
+		overflow-y: auto;
+		border: 1px solid #aaa;
+		padding-left: 20px;
+		padding-top: 10px;
+	}
+	.second_wrap {
+		width: 800px;
+		margin: 0px auto;
+		background-color: #fff;
+	}
+	#instruction {
+		position: absolute; 
+		width: 300px; 
+		top: 120px;
+		border: 1px solid #333;
+		z-index: -1;
+	}
+	#instructionHandler {
+		position: absolute; 
+		width: 30px; 
+		height: 110px; 
+		border: 1px solid #333; 
+		left: -34px; 
+		font-size: 20px;
+		background-color: #ccc;
+		padding-top: 10px;
+		top: 120px;
+		cursor: pointer;
+		border-radius: 10px 0px 0px 10px;
+	}
+	#instructionUl {
+		text-align: left;
+		font-size: 20px;
+		padding-right: 20px;
+	}
+	#instructionUl li {
+		margin-bottom: 10px;
+	}
+</style>
+{% endblock %}
+
+{% block native_js %}
+<script src="/static_files/js/ajaxfileupload.js"></script>
+<script type="text/javascript" src="/static_files/ztree/js/jquery.ztree.all-3.2.js"></script>
+<script>
+(function($){
+    $.fn.preventScroll = function(){
+        var _this = this.get(0);
+        if($.browser.mozilla){
+            _this.addEventListener('DOMMouseScroll',function(e){
+                _this.scrollTop += e.detail > 0 ? 60 : -60;   
+                e.preventDefault();
+            },false); 
+        }else{
+            _this.onmousewheel = function(e){   
+                e = e || window.event;   
+                _this.scrollTop += e.wheelDelta > 0 ? -60 : 60;   
+                e.returnValue = false  
+            };
+        }
+        return this;
+    };
+})(jQuery);
+$(function(){
+	var csrfToken = $('input[name=csrfmiddlewaretoken]').val();
+	// 无宕机选项
+	if('{{project.name}}' != 'as-web'){
+		$('#serverGroupLbl').css({display: 'none'});
+		$('#serverGroupSel').css({display: 'none'});
+	} 
+	$('#uploadBtn').click(function(){
+		var $this = $(this);
+		var deployItemName = $('#deployItemField').val();
+		if(!deployItemName){
+			alert('请先选择要上传的文件!');
+			return false;
+		}
+		// static的情形只能发版本，上传tar.gz包
+		{% if project.name != 'as-static'%}
+		if('{{deployType}}' == 'patch' && !(/.zip$/i).test(deployItemName)){
+			alert('请选择zip压缩格式的补丁文件!');
+			return false;
+		}
+		if('{{deployType}}' == 'war' && !(/.war$/i).test(deployItemName)){
+			alert('请选择war包进行上传!');
+			return false;
+		}
+		{% else %}
+		if(!(/.tar.gz/i).test(deployItemName)) {
+			alert('请注意，【static】工程只能上传tar.gz包发版本!!!\请不要发补丁!!!');
+			return false;
+		}
+		{% endif %}
+		$this.val('上传中').attr({disabled: true});
+		$.ajaxFileUpload({
+			url: '/uploadDeployItem/',
+			secureuri: false, 
+			fileElementId:'deployItemField',
+			dataType: 'json',
+			data: {
+				csrfmiddlewaretoken: csrfToken,
+				projId: '{{project.id}}',
+				version: '{{version}}',
+				deployType: '{{deployType}}',
+				recordId: '{{record.id}}',
+				patchGroupId: '{{patchGroupId}}'
+			},
+			success: function (data, status){
+				if(typeof data == 'object' && data.isSuccess === true){
+					var sizeUnits = ['byte', 'kb', 'MB', 'GB']
+					var size = data.size;
+					for(i=0; i <=sizeUnits.length && size > 1024; size = (size/1024).toFixed(2), i++);
+					var sizeStr = size + sizeUnits[i];
+					$('#uploadResult').html('文件上传成功!').css({color: 'green'});
+					$('#uploadFilename').html('文  件  名: ' + data.filename).css({color: 'green'});;
+					$('#uploadFileSize').html('文件大小: ' + sizeStr).css({color: 'green'});
+					$('#uploadDetailWrap').show();
+				}else{
+					this.error(data, status);
+					return;
+				}
+				$this.val('重新上传').attr({disabled: false});
+			},
+			error: function(data, status, e){
+				$('#uploadResult')
+						.html(data.errorMsg || '文件上传失败!')
+						.css({color: 'red'});
+				$('#uploadDetailWrap').hide();
+				$this.val('重新上传').attr({disabled: false});
+			}
+		});
+		return false;
+	});
+	
+	if('{{deployType}}' == 'patch'){
+		$('#toggleReadmeUpdateBtn').attr({disabled: true}).css({display: 'none'});
+		$('#uploadReadmeBtn').attr({disabled: true}).css({display: 'none'});
+		$('#readmeField').css({display: 'none'});
+	}
+	$('#toggleReadmeUpdateBtn').toggle(function(){
+		$('#readmeUpdateArea').slideDown();
+		$(this).val('收起readme更新区');
+	}, function(){
+		$('#readmeUpdateArea').slideUp();
+		$(this).val('更新readme');
+	});
+	$('#uploadReadmeBtn').click(function(){
+		if(!$('#readmeField').val()){
+			alert('请先选择要上传的readme文件!');
+			return false;
+		}
+		$this = $(this);
+		$this.val('readme上传中').attr({disabled: true});
+		$.ajaxFileUpload({
+			url: '/uploadReadme/',
+			secureuri: false, 
+			fileElementId:'readmeField',
+			dataType: 'json',
+			data: {
+				csrfmiddlewaretoken: csrfToken,
+				projName: '{{project.name}}',
+				version: '{{version}}',
+			},
+			success: function (data, status){
+				if(typeof data == 'object' && data.isSuccess === true){
+					$('#readmeContent').val(data.readmeContent);
+				}else{
+					this.error(data, status);
+					return;
+				}
+				$this.val('上传新的readme').attr({disabled: false});
+			},
+			error: function(data, status, e){
+				alert('readme上传失败');
+				$this.val('上传新的readme').attr({disabled: false});
+			}
+		})
+	});
+	
+	
+	if('{{deployType}}' == 'war'){
+		$('#decompressBtn').attr({disabled: true}).css({display: 'none'});
+		$('#fileListWrap').css({display: 'none'});
+		$('#conflict_file_info_list').css({display: 'none'});
+	}
+	$('#decompressBtn').click(function(){
+		$('#decompressBtn').val('解压中').attr({disabled:true});
+		
+		$.post('/decompressItem/', {
+			recordId: '{{record.id}}',
+			patchGroupId: '{{patchGroupId}}'
+		}, function(data){
+			$('#decompressBtn').val('解压补丁文件').attr({disabled:false});
+			var result = null;
+			try{
+				result = $.parseJSON(data);
+			}catch(e) {
+			}
+			if(result && result.isSuccess === true){
+				if(result.readme){
+					$('#readmeContent').val(result.readme);
+				}
+				$fileListTblBody = $('#fileListTbl').children('tbody');
+				$fileListTblBody.children().remove();
+				if($.isArray(result.fileList)){
+					$('#fileListContent').val(result.fileList.join('\r\n'));
+					for(var i=0, l=result.fileList.length; i<l; i++){
+						$fileListTblBody.append('<tr><td>' + result.fileList[i] + '</td></tr>')
+					}
+				}
+				
+				var $conflict_tbl = $('#conflictFileInfoTbl');
+				var $conflict_tbody = $conflict_tbl.children('tbody').children().remove().end();
+				var conflict_file_info_list = result.conflict_file_info_list;
+				var conflict_dict = {};
+				if($.isArray(conflict_file_info_list)){
+					for(var i=0, l=conflict_file_info_list.length; i<l; i++){
+						$conflict_tbody.append(
+							$('<tr>').append('<td>' + conflict_file_info_list[i].file_path + '</td>')
+								.append('<td>' + conflict_file_info_list[i].conflict_patch_group_name + '</td>')
+						);
+						conflict_dict[conflict_file_info_list[i].file_path] = true
+					}
+				}
+				$fileListTblBody.find('tr td:nth-child(1)').each(function(i, v){
+					if(conflict_dict[v.innerHTML] === true) {
+						v.style.backgroundColor = '#f88';
+					}
+				});
+				alert('解压缩成功!');
+			}else{
+				alert('解压缩失败!')
+			}
+		})
+	});
+	
+	$('#startBackupBtn').click(function(){
+		var $this = $(this);
+		$('#startDeployBtn').attr({disabled: true});
+		$('#startRollbackBtn').attr({disabled: true});
+		$this.val('补丁组发布中').attr({disabled: true});
+		$.post('/startDeploy/', {
+			recordId: '{{record.id}}',
+			deployType: '{{deployType}}',
+			serverGroup: $('#serverGroupSel').val(),	// 这个参数在此处没用
+			patchGroupId: '{{patchGroupId}}',
+			deployDirect: 'backup'
+		}, function(data){
+			var result = null;
+			try{
+				result = $.parseJSON(data);
+			} catch (e) {}
+			if(!result || result.beginDeploy != true) {
+				alert('补丁组发布启动失败!');
+				failedInDeployProcess(result.errorMsg);
+				return;
+			} else {
+				$('#deployStatus').html('补丁组发布启动成功').css({color: 'green'});
+				$('#logContent').val('');
+			}
+			var logReadInterval = 1500;
+			setTimeout(readLogOnRealtime, logReadInterval);
+			function readLogOnRealtime(){
+				$.getJSON('/readDeployLogOnRealtime/', {
+					recordId: '{{record.id}}'
+				}, function(data){
+					if(!data){
+						alert('日志实时读取出错了!');
+						failedInDeployProcess();
+						return;
+					}
+					if(data.isFinished === true){
+						alert('补丁组发布已完成!');
+						$('#startDeployBtn').attr({disabled: false});
+						$('#startRollbackBtn').attr({disabled: false});
+						$('#startBackupBtn').val('补丁组发布').attr({disabled: false});
+						if(data.deployResult === true){
+							$('#deployStatus').html('补丁组发布成功').css({color: 'green'});
+						}else{
+							$('#deployStatus').html('补丁组发布失败').css({color: 'red'});
+						}
+						return;
+					}
+					if(!data.isFinished){
+						$logContent = $('#logContent');
+						var newLogInfoArr = [];
+						if(data.logInfo && data.logInfo.length){
+							for(var i=0; i<data.logInfo.length; i++){
+								newLogInfoArr.push(data.logInfo[i]);
+							}
+						}
+						$logContent.val($logContent.val() + newLogInfoArr.join(''));
+						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
+						setTimeout(readLogOnRealtime, logReadInterval)
+					}
+				});
+			}
+		});
+		
+		function failedInDeployProcess(errorMsg){
+			var tip = errorMsg? ' [ ' + errorMsg + ' ] ' : '';
+			$('#startDeployBtn').attr({disabled: false});
+			$('#startRollbackBtn').attr({disabled: false});
+			$('#startBackupBtn').attr({disabled: false});
+			$('#deployStatus').html('补丁组发布失败，请重新发布' + tip).css({color: 'red'});
+		}
+		
+	});
+	
+	$('#startDeployBtn').click(function(){
+		var $this = $(this);
+		$this.val('发布中').attr({disabled: true});
+		$('#startRollbackBtn').attr({disabled: true});
+		$('#startBackupBtn').attr({disabled: true});
+		$.post('/startDeploy/', {
+			recordId: '{{record.id}}',
+			deployType: '{{deployType}}',
+			serverGroup: $('#serverGroupSel').val(),
+			patchGroupId: '{{patchGroupId}}'
+		}, function(data){
+			var result = null;
+			try{
+				result = $.parseJSON(data);
+			}catch(e) {
+			}
+			if(!result || result.beginDeploy !== true){
+				alert('发布启动失败!');
+				failedInDeployProcess(result.errorMsg);
+				return;
+			}else{
+				$('#deployStatus').html('发布启动成功').css({color: 'green'});
+				$('#logContent').val('');
+			}
+			var logReadInterval = 1500;
+			setTimeout(readLogOnRealtime, logReadInterval);
+			function readLogOnRealtime(){
+				$.getJSON('/readDeployLogOnRealtime/', {
+					recordId: '{{record.id}}'
+				}, function(data){
+					if(!data){
+						alert('日志实时读取出错了!');
+						failedInDeployProcess();
+						return;
+					}
+					if(data.isFinished === true){
+						alert('发布已完成!');
+						$('#startDeployBtn').val('重新发布').attr({disabled: false});
+						$('#startRollbackBtn').attr({disabled: false});
+						$('#startBackupBtn').attr({disabled: false});
+						if(data.deployResult === true){
+							$('#deployStatus').html('发布成功').css({color: 'green'});
+						}else{
+							$('#deployStatus').html('发布失败').css({color: 'red'});
+						}
+						return;
+					}
+					if(!data.isFinished){
+						$logContent = $('#logContent');
+						var newLogInfoArr = [];
+						if(data.logInfo && data.logInfo.length){
+							for(var i=0; i<data.logInfo.length; i++){
+								newLogInfoArr.push(data.logInfo[i]);
+							}
+						}
+						$logContent.val($logContent.val() + newLogInfoArr.join(''));
+						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
+						setTimeout(readLogOnRealtime, logReadInterval)
+					}
+				});
+			}
+		});
+		
+		function failedInDeployProcess(errorMsg){
+			var tip = errorMsg? ' [ ' + errorMsg + ' ] ' : '';
+			$('#startDeployBtn').val('重新发布').attr({disabled: false});
+			$('#startRollbackBtn').attr({disabled: false});
+			$('#startBackupBtn').attr({disabled: false});
+			$('#deployStatus').html('发布失败，请重新发布' + tip).css({color: 'red'});
+		}
+	});
+	
+	if('{{deployType}}' == 'war'){
+		$('#startRollbackBtn').attr({disabled: true}).css({display: 'none'});
+		$('#startBackupBtn').attr({disabled: true}).css({display: 'none'});
+	}
+	$('#startRollbackBtn').click(function(){
+		var $this = $(this);
+		$this.val('回滚中').attr({disabled: true});
+		$('#startDeployBtn').attr({disabled: true});
+		$('#startBackupBtn').attr({disabled: true});
+		$.post('/startRollback/', {
+			recordId: '{{record.id}}',
+			deployType: '{{deployType}}',
+			serverGroup: $('#serverGroupSel').val(),
+		}, function(data){
+			var result = null;
+			try{
+				result = $.parseJSON(data);
+			}catch(e) {
+			}
+			if(!result || result.beginDeploy !== true){
+				alert('回滚启动失败!');
+				failedInDeployProcess(result.errorMsg);
+				return;
+			}else{
+				$('#deployStatus').html('回滚启动成功').css({color: 'green'});
+				$('#logContent').val('');
+			}
+			var logReadInterval = 1500;
+			setTimeout(readLogOnRealtime, logReadInterval);
+			function readLogOnRealtime(){
+				$.getJSON('/readDeployLogOnRealtime/', {
+					recordId: '{{record.id}}'
+				}, function(data){
+					if(!data){
+						alert('日志实时读取出错了!');
+						failedInDeployProcess();
+						return;
+					}
+					if(data.isFinished === true){
+						alert('回滚已完成!');
+						//TODO
+						$this.val('回滚').attr({disabled: false});
+						$('#startDeployBtn').attr({disabled: false});
+						$('#startBackupBtn').attr({disabled: false});
+						if(data.deployResult === true){
+							$('#deployStatus').html('回滚成功').css({color: 'green'});
+						}else{
+							$('#deployStatus').html('回滚失败').css({color: 'red'});
+						}
+						return;
+					}
+					if(!data.isFinished){
+						$logContent = $('#logContent');
+						var newLogInfoArr = [];
+						if(data.logInfo && data.logInfo.length){
+							for(var i=0; i<data.logInfo.length; i++){
+								newLogInfoArr.push(data.logInfo[i]);
+							}
+						}
+						$logContent.val($logContent.val() + newLogInfoArr.join(''));
+						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
+						setTimeout(readLogOnRealtime, logReadInterval)
+					}
+				});
+			}
+		});
+		
+		function failedInDeployProcess(errorMsg){
+			var tip = errorMsg? ' [ ' + errorMsg + ' ] ' : '';
+			$('#startRollbackBtn').val('回滚').attr({disabled: false});
+			$('#startDeployBtn').attr({disabled: false});
+			$('#startBackupBtn').attr({disabled: false});
+			$('#deployStatus').html('回滚失败，请重新发布' + tip).css({color: 'red'});
+		}
+	});
+	
+	$('#unlockAndLeave').click(function(){
+		if(!confirm('确认要解锁本次发布并离开?')){
+			return;
+		}
+		window.onbeforeunload = null;
+		location.href = '/unlockDeploy';
+	});
+	
+	// 文件树
+	if('{{deployType}}' == 'war'){
+		$('#downloadProjectFileWrap').remove();
+	}else{
+		try{
+			$('#toggleDownloadProjectFileBtn').toggle(function(){
+				$('#downloadProjectFileArea').slideDown();
+				$(this).val('收起下载区');
+			}, function(){
+				$('#downloadProjectFileArea').slideUp();
+				$(this).val('下载工程文件');
+			});
+			(function(){
+				var setting = {
+					async: {
+						enable: true,
+						url: function(treeId, treeNode){
+							params = 'id'
+							urlArr = ['getProjectFileNodes', '{{project.id}}', 0, treeNode.id]
+							return '/' + urlArr.join('/') + '/?file_path=' + encodeURIComponent(treeNode.file_path) 
+						},
+						view: {
+							expandSpeed: ''
+						},
+						data: {
+							simpleData: {
+								enable: true
+							}
+						}
+					}
+				};
+				var zNodes =[
+					{name:'{{project.war_name}}@{{curServer}}', id: '0', isParent:true, file_path: ''},
+				];
+				$.fn.zTree.init($("#fileTree"), setting, zNodes);
+				
+				$('#fileTreeWrap').preventScroll();
+				
+				var treeObj = $.fn.zTree.getZTreeObj('fileTree');
+				$('#downloadProjectFileBtn').click(function(){
+					var nodes = treeObj.getSelectedNodes();
+					if(!nodes || !nodes[0] || nodes[0].isParent){
+						alert('请先选中文件!')
+					} else {
+						node = nodes[0]
+						url = '/downloadProjectFile/{{project.id}}/0/?file_path=' + encodeURIComponent(node.file_path) + '&file_name=' + encodeURIComponent(node.name);
+						window.open(url, 'downloadFileFrame')
+					}
+				});
+			})();
+		}catch(e){
+			// 插件在ie下出问题了，可以去找找其他版本
+			$('#toggleDownloadProjectFileBtn').css({display: 'none'});
+		}
+	}
+	
+	// 注意事项
+	(function(){
+		var initTop = 120,
+			initHandlerLeft = -34,
+			$instruction = $('#instruction'),
+			$instructionHandler = $('#instructionHandler');
+		function slideAction(event){
+			var $this = $(document);
+			var top = $this.scrollTop() + initTop,
+				docHeight = document.documentElement.clientHeight;
+			if(top + $instruction.height() > docHeight + $this.scrollTop()){
+				top = docHeight + $this.scrollTop() - $instruction.height() - 30;
+				top < initTop && (top = initTop);
+			}
+			$instruction.stop().animate({
+				top: top
+			});
+			$instructionHandler.stop().animate({
+				top: top
+			})
+		}
+		window.onscroll = slideAction;
+		window.onresize = slideAction;
+		
+		// 不会布局造成的麻烦
+		$instructionHandler.toggle(function(){
+			$instruction.animate({left: -304});
+			$instructionHandler.animate({left: -304 + initHandlerLeft})
+			$instructionHandler.html('收起提示');
+		}, function(){
+			$instruction.animate({left: 0});
+			$instructionHandler.animate({left: initHandlerLeft});
+			$instructionHandler.html('注意事项');
+		});
+	})();
+	
+});
+window.onbeforeunload = function(){
+	var alarmStr = '发布过程中，请不要离开!\n请点击 [ 取消 ] 或 [ 留在此页 ] ';
+	if($.browser.mozilla === true && !confirm(alarmStr)){
+		return false;
+	}
+	window.event.returnValue = alarmStr;
+	return alarmStr;
+};
+
+// 查看磁盘挂载情况，如果挂载不上，给出提示
+function checkServerStatusForProject(projectName){
+	if(!projectName){
+		alert('工程参数有误！');
+		return;
+	}
+	$.getJSON('/checkServerStatusForProject/' + projectName + '/', function(serverStatus){
+		if(!serverStatus){
+			alert('磁盘挂载检查失败！')
+			return;
+		}
+		if(serverStatus.available){
+			if(serverStatus['servers'][0]['status'] == 'lackOfSpace'){
+				var availSpace = serverStatus['servers'][0]['avail_space'];
+				alert('/d/content空间已不足\n目前可用空间为' + availSpace);
+			}
+			return;
+		}
+		if(serverStatus.available === false){
+			if(serverStatus.servers.length == 0){
+				alert('工程名称或者配置信息有误！');
+				return;
+			}
+			var msgArr = ['/d/content磁盘在以下服务器上挂载失败!'];
+			for(var i=0, l = serverStatus.servers.length; i<l; i++){
+				var server = serverStatus.servers[i];
+				server.status == 'error' && msgArr.push(server.server_name + '挂载磁盘失败');
+			}
+			alert(msgArr.join('\n'));
+			return;
+		}
+	});
+}
+$(function(){
+	//checkServerStatusForProject('{{project.name}}');
+});
+</script>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="wrap" id="firstWrap">
+	<div id="instruction" >
+		<ul id="instructionUl">
+			<li>版本发布只能上传war包。</li>
+			<li>补丁发布只能上传zip压缩文件。</li>
+			<li>补丁的文件名请以“<b style="color:red">-todo</b>”或“<b style="color:red">-pending</b>”结尾。</li>
+			<li>进行发布或回滚的过程中，请不要离开此页面或进行解锁操作。</li>
+			<li>请不要在补丁中使用中文做文件名。</li>
+			<li>发布完成后，除了页面弹出框的提示，还要依据log的内容来判断发布是否成功。</li>
+			<li>离开此页面时，请记得解锁。如果没有解锁，可在首页进行解锁操作。</li>
+		</ul>
+	</div>
+	<div id="secondWrap" class="second_wrap">
+		<div id="instructionHandler">
+			注意事项
+		</div>
+		<h2>发布工程</h2>
+		<div class="sect_wrap">
+			<ul class="deploy_init_info">
+				<li>发布工程: <b>{{project.name}}</b></li>
+				<li>版&nbsp;本&nbsp;号: <b>{{version}}</b></li>
+				<li>发布方式: <b>{{deployType}}</b></li>
+				<li>补丁分组: <b>
+					{% if patchGroup %}
+						{{patchGroup.name}} ({{patchGroup.check_code}})
+					{% else %}
+						无
+					{% endif %}</b>
+				</li>
+			</ul>
+			<br/>
+			<div class="upload_area" id="downloadProjectFileWrap" style="display:none;">
+				<br/>
+				<input type="button" value="下载工程文件" id="toggleDownloadProjectFileBtn"/>
+				<div id="downloadProjectFileArea" style="display:none; padding-top: 20px;">
+					<input type="button" value="下载文件" id="downloadProjectFileBtn"/>
+					<div id="fileTreeWrap">
+						<ul id="fileTree" class="ztree"></ul>
+					</div>
+				</div>
+				<div style="display:none">
+					<iframe name="downloadFileFrame"></iframe>
+				</div>
+				<br/>
+			</div>
+			<div class="upload_area">
+				<br/>
+				<!-- 机制尚不完全确定，暂时在这里写死 -->
+				<label id="serverGroupLbl" style="color: #069">无宕机选项:</label>
+				<select id="serverGroupSel" style="font-size: 16px;">
+					<option value="ab">全部</option>
+					<option value="a">a组</option>
+					<option value="b">b组</option>
+				</select>
+				<br/>
+				<label>上传文件:</label>
+				<input type="file" name="deployItemField" id="deployItemField"/>
+				<input type="button" value="上传" id="uploadBtn"/>
+				<br/>
+				<label>文件上传状态:</label>
+				<span class="desc" id="uploadResult">尚未上传文件</span>
+				<br/>
+				<div id="uploadDetailWrap">
+					<label></label>
+					<span class="desc" id="uploadFilename"></span>
+					<br/>
+					<label></label>
+					<span class="desc" id="uploadFileSize"></span>
+				</div>
+			</div>
+		</div>
+		<div class="sect_wrap">
+			<div class="check_area">
+				<input type="button" value="解压补丁文件" id="decompressBtn"/>
+				<input type="button" value="更新readme" id="toggleReadmeUpdateBtn"/>
+				<div id="readmeUpdateArea" style="display:none; padding-top:20px;">
+					<input type="file" name="readmeField" id="readmeField"/>
+					<input type="button" value="上传新的readme" id="uploadReadmeBtn"/>
+				</div>
+				<div style="padding-top: 20px;">
+					<label>README</label>
+					<br/>
+					<textarea id="readmeContent" readonly="readonly">{{readmeContent}}</textarea>
+				</div>
+				<div style="padding-top: 20px;" id="fileListWrap">
+					<label>文件列表</label>
+					<br/>
+					<table id="fileListTbl" border="1" cellspacing="0" style="width: 800px;">
+						<thead>
+							<tr><th>文件路径</th></tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+				<div style="padding-top: 20px;" id="conflict_file_info_list" >
+					<label>冲突详情</label>
+					<table id="conflictFileInfoTbl" border="1" cellspacing="0">
+						<thead>
+							<tr>
+								<th width="600">文件路径</th>
+								<th width="200">冲突补丁组</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+				<div style="padding-top: 20px;">
+					<input type="button" value="发布" id="startDeployBtn" _disabled="disabled"/>
+					<input type="button" value="回滚" id="startRollbackBtn" _disabled="disabled"/>
+					{% if patchGroup and patchGroup.status == 'testing' %}
+						{% if user.is_superuser %}
+						<input type="button" value="补丁组发布" id="startBackupBtn" _disabled="disabled"/>
+						{% endif %}
+					{% endif %}
+					<span style="font-size: 20px;" id="deployStatus"></span>
+				</div>
+				<div style="padding-top: 20px;">
+					<label>LOG</label>
+					<br/>
+					<textarea id="logContent" readonly="readonly" style="height: 400px;"></textarea>
+				</div>
+				<div style="padding-top: 20px;">
+					<input type="button" id="unlockAndLeave" value="解锁并返回首页"/>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

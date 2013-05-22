@@ -1,121 +1,31 @@
 {% extends "base.html" %}
 {% block style %}
-<link style="text/css" rel="stylesheet" href="/static_files/ztree/css/zTreeStyle.css"/>
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/static_files/css/custom-theme/jquery-ui-1.10.0.custom.css"/>
 <style>
-	div.wrap {
-		text-align: center;
-		padding-top: 50px;
-		width: 800px;
-		margin: 0px auto;
-		position: relative;
-	}
-	div.sect_wrap {
-		width: 800px;
-		text-align: left;
-		margin: 0px auto 20px;
-	}
-	div.sect_wrap input {
-		font-size: 16px;
-	}
-	div.sect_wrap label {
-		display: inline-block;
-		width: 150px;
-		font-size: 20px;
-	}
-	div.sect_wrap textarea {
-		font-size: 20px;
-		width: 800px;
-		height: 200px;
-	}
-	ul.deploy_init_info {
-		list-style: none;
-		font-size: 20px;
-		margin: 0px;
-		padding: 0px;
-		display: inline-block;
-		width: 600px;
-	}
-	div.upload_area .desc {
-		font-size: 20px;
-	}
-	#deployItemField {
-		width: 400px;
-	}
-	#uploadDetailWrap {
-		display: none;
-	}
-	
-	#downloadProjectFileArea{
-		
-	}
-	
-	#fileTreeWrap{
-		height: 400px;
-		overflow-y: auto;
-		border: 1px solid #aaa;
-		padding-left: 20px;
-		padding-top: 10px;
-	}
-	.second_wrap {
-		width: 800px;
-		margin: 0px auto;
-		background-color: #fff;
-	}
-	#instruction {
-		position: absolute; 
-		width: 300px; 
-		top: 120px;
-		border: 1px solid #333;
-		z-index: -1;
-	}
-	#instructionHandler {
-		position: absolute; 
-		width: 30px; 
-		height: 110px; 
-		border: 1px solid #333; 
-		left: -34px; 
-		font-size: 20px;
-		background-color: #ccc;
-		padding-top: 10px;
-		top: 120px;
-		cursor: pointer;
-		border-radius: 10px 0px 0px 10px;
-	}
-	#instructionUl {
-		text-align: left;
-		font-size: 20px;
-		padding-right: 20px;
-	}
-	#instructionUl li {
-		margin-bottom: 10px;
-	}
+.table > thead {
+	background-color: #eee;
+}
+.alert {
+	font-size: 16px;
+}
 </style>
 {% endblock %}
 
 {% block native_js %}
 <script src="/static_files/js/ajaxfileupload.js"></script>
-<script type="text/javascript" src="/static_files/ztree/js/jquery.ztree.all-3.2.js"></script>
+<script src="/static_files/js/bootstrap.min.js"></script>
+<script src="/static_files/js/jquery-ui-1.10.0.custom.min.js"></script>
+<script src="/static_files/js/bootstrapFileInput.js"></script>
 <script>
-(function($){
-    $.fn.preventScroll = function(){
-        var _this = this.get(0);
-        if($.browser.mozilla){
-            _this.addEventListener('DOMMouseScroll',function(e){
-                _this.scrollTop += e.detail > 0 ? 60 : -60;   
-                e.preventDefault();
-            },false); 
-        }else{
-            _this.onmousewheel = function(e){   
-                e = e || window.event;   
-                _this.scrollTop += e.wheelDelta > 0 ? -60 : 60;   
-                e.returnValue = false  
-            };
-        }
-        return this;
-    };
-})(jQuery);
 $(function(){
 	var csrfToken = $('input[name=csrfmiddlewaretoken]').val();
+	$('#fileuploadWidget').bootstrapFileInput({
+		width: '500px',
+		btnWidth: '80px',
+		fileInputId: 'deployItemField',
+		fileInputName: 'deployItemField'
+	});
 	// 无宕机选项
 	if('{{project.name}}' != 'as-web'){
 		$('#serverGroupLbl').css({display: 'none'});
@@ -144,7 +54,8 @@ $(function(){
 			return false;
 		}
 		{% endif %}
-		$this.val('上传中').attr({disabled: true});
+		$this.html('上传中').attr({disabled: true});
+		var $uploadResultWrap = $('#uploadResultWrap');
 		$.ajaxFileUpload({
 			url: '/uploadDeployItem/',
 			secureuri: false, 
@@ -159,27 +70,33 @@ $(function(){
 				patchGroupId: '{{patchGroupId}}'
 			},
 			success: function (data, status){
+				$uploadResultWrap.children().remove();
 				if(typeof data == 'object' && data.isSuccess === true){
 					var sizeUnits = ['byte', 'kb', 'MB', 'GB']
 					var size = data.size;
 					for(i=0; i <=sizeUnits.length && size > 1024; size = (size/1024).toFixed(2), i++);
 					var sizeStr = size + sizeUnits[i];
-					$('#uploadResult').html('文件上传成功!').css({color: 'green'});
-					$('#uploadFilename').html('文  件  名: ' + data.filename).css({color: 'green'});;
-					$('#uploadFileSize').html('文件大小: ' + sizeStr).css({color: 'green'});
-					$('#uploadDetailWrap').show();
+					//$('#uploadResult').html('文件上传成功!').css({color: 'green'});
+					//$('#uploadFilename').html('文  件  名: ' + data.filename).css({color: 'green'});;
+					//$('#uploadFileSize').html('文件大小: ' + sizeStr).css({color: 'green'});
+					var $alert = $('<div>').addClass('alert alert-success').html([
+						'文件上传成功!',
+						'文  件  名: <strong>' + data.filename + '</strong>',
+						'文件大小: <strong>' + sizeStr + '</strong>'
+					].join('<br/>'));
+					$alert.prepend('<button type="button" class="close" data-dismiss="alert">&times;</button>');
+					$uploadResultWrap.append($alert);
 				}else{
 					this.error(data, status);
 					return;
 				}
-				$this.val('重新上传').attr({disabled: false});
+				$this.html('上&nbsp;&nbsp;传').attr({disabled: false});
 			},
 			error: function(data, status, e){
-				$('#uploadResult')
-						.html(data.errorMsg || '文件上传失败!')
-						.css({color: 'red'});
-				$('#uploadDetailWrap').hide();
-				$this.val('重新上传').attr({disabled: false});
+				var $alert = $('<div>').addClass('alert alert-error').html(data.errorMsg || '文件上传失败!');
+				$alert.prepend('<button type="button" class="close" data-dismiss="alert">&times;</button>');
+				$uploadResultWrap.append($alert);
+				$this.html('上&nbsp;&nbsp;传').attr({disabled: false});
 			}
 		});
 		return false;
@@ -190,46 +107,6 @@ $(function(){
 		$('#uploadReadmeBtn').attr({disabled: true}).css({display: 'none'});
 		$('#readmeField').css({display: 'none'});
 	}
-	$('#toggleReadmeUpdateBtn').toggle(function(){
-		$('#readmeUpdateArea').slideDown();
-		$(this).val('收起readme更新区');
-	}, function(){
-		$('#readmeUpdateArea').slideUp();
-		$(this).val('更新readme');
-	});
-	$('#uploadReadmeBtn').click(function(){
-		if(!$('#readmeField').val()){
-			alert('请先选择要上传的readme文件!');
-			return false;
-		}
-		$this = $(this);
-		$this.val('readme上传中').attr({disabled: true});
-		$.ajaxFileUpload({
-			url: '/uploadReadme/',
-			secureuri: false, 
-			fileElementId:'readmeField',
-			dataType: 'json',
-			data: {
-				csrfmiddlewaretoken: csrfToken,
-				projName: '{{project.name}}',
-				version: '{{version}}',
-			},
-			success: function (data, status){
-				if(typeof data == 'object' && data.isSuccess === true){
-					$('#readmeContent').val(data.readmeContent);
-				}else{
-					this.error(data, status);
-					return;
-				}
-				$this.val('上传新的readme').attr({disabled: false});
-			},
-			error: function(data, status, e){
-				alert('readme上传失败');
-				$this.val('上传新的readme').attr({disabled: false});
-			}
-		})
-	});
-	
 	
 	if('{{deployType}}' == 'war'){
 		$('#decompressBtn').attr({disabled: true}).css({display: 'none'});
@@ -237,13 +114,13 @@ $(function(){
 		$('#conflict_file_info_list').css({display: 'none'});
 	}
 	$('#decompressBtn').click(function(){
-		$('#decompressBtn').val('解压中').attr({disabled:true});
+		$('#decompressBtn').html('解&nbsp;压&nbsp;中').attr({disabled:true});
 		
 		$.post('/decompressItem/', {
 			recordId: '{{record.id}}',
 			patchGroupId: '{{patchGroupId}}'
 		}, function(data){
-			$('#decompressBtn').val('解压补丁文件').attr({disabled:false});
+			$('#decompressBtn').html('解压补丁文件').attr({disabled:false});
 			var result = null;
 			try{
 				result = $.parseJSON(data);
@@ -251,12 +128,11 @@ $(function(){
 			}
 			if(result && result.isSuccess === true){
 				if(result.readme){
-					$('#readmeContent').val(result.readme);
+					$('#readmeContent').html(result.readme);
 				}
 				$fileListTblBody = $('#fileListTbl').children('tbody');
 				$fileListTblBody.children().remove();
 				if($.isArray(result.fileList)){
-					$('#fileListContent').val(result.fileList.join('\r\n'));
 					for(var i=0, l=result.fileList.length; i<l; i++){
 						$fileListTblBody.append('<tr><td>' + result.fileList[i] + '</td></tr>')
 					}
@@ -397,7 +273,7 @@ $(function(){
 					}
 					if(data.isFinished === true){
 						alert('发布已完成!');
-						$('#startDeployBtn').val('重新发布').attr({disabled: false});
+						$('#startDeployBtn').html('重新发布').attr({disabled: false});
 						$('#startRollbackBtn').attr({disabled: false});
 						$('#startBackupBtn').attr({disabled: false});
 						if(data.deployResult === true){
@@ -425,7 +301,7 @@ $(function(){
 		
 		function failedInDeployProcess(errorMsg){
 			var tip = errorMsg? ' [ ' + errorMsg + ' ] ' : '';
-			$('#startDeployBtn').val('重新发布').attr({disabled: false});
+			$('#startDeployBtn').html('重新发布').attr({disabled: false});
 			$('#startRollbackBtn').attr({disabled: false});
 			$('#startBackupBtn').attr({disabled: false});
 			$('#deployStatus').html('发布失败，请重新发布' + tip).css({color: 'red'});
@@ -516,98 +392,6 @@ $(function(){
 		location.href = '/unlockDeploy';
 	});
 	
-	// 文件树
-	if('{{deployType}}' == 'war'){
-		$('#downloadProjectFileWrap').remove();
-	}else{
-		try{
-			$('#toggleDownloadProjectFileBtn').toggle(function(){
-				$('#downloadProjectFileArea').slideDown();
-				$(this).val('收起下载区');
-			}, function(){
-				$('#downloadProjectFileArea').slideUp();
-				$(this).val('下载工程文件');
-			});
-			(function(){
-				var setting = {
-					async: {
-						enable: true,
-						url: function(treeId, treeNode){
-							params = 'id'
-							urlArr = ['getProjectFileNodes', '{{project.id}}', 0, treeNode.id]
-							return '/' + urlArr.join('/') + '/?file_path=' + encodeURIComponent(treeNode.file_path) 
-						},
-						view: {
-							expandSpeed: ''
-						},
-						data: {
-							simpleData: {
-								enable: true
-							}
-						}
-					}
-				};
-				var zNodes =[
-					{name:'{{project.war_name}}@{{curServer}}', id: '0', isParent:true, file_path: ''},
-				];
-				$.fn.zTree.init($("#fileTree"), setting, zNodes);
-				
-				$('#fileTreeWrap').preventScroll();
-				
-				var treeObj = $.fn.zTree.getZTreeObj('fileTree');
-				$('#downloadProjectFileBtn').click(function(){
-					var nodes = treeObj.getSelectedNodes();
-					if(!nodes || !nodes[0] || nodes[0].isParent){
-						alert('请先选中文件!')
-					} else {
-						node = nodes[0]
-						url = '/downloadProjectFile/{{project.id}}/0/?file_path=' + encodeURIComponent(node.file_path) + '&file_name=' + encodeURIComponent(node.name);
-						window.open(url, 'downloadFileFrame')
-					}
-				});
-			})();
-		}catch(e){
-			// 插件在ie下出问题了，可以去找找其他版本
-			$('#toggleDownloadProjectFileBtn').css({display: 'none'});
-		}
-	}
-	
-	// 注意事项
-	(function(){
-		var initTop = 120,
-			initHandlerLeft = -34,
-			$instruction = $('#instruction'),
-			$instructionHandler = $('#instructionHandler');
-		function slideAction(event){
-			var $this = $(document);
-			var top = $this.scrollTop() + initTop,
-				docHeight = document.documentElement.clientHeight;
-			if(top + $instruction.height() > docHeight + $this.scrollTop()){
-				top = docHeight + $this.scrollTop() - $instruction.height() - 30;
-				top < initTop && (top = initTop);
-			}
-			$instruction.stop().animate({
-				top: top
-			});
-			$instructionHandler.stop().animate({
-				top: top
-			})
-		}
-		window.onscroll = slideAction;
-		window.onresize = slideAction;
-		
-		// 不会布局造成的麻烦
-		$instructionHandler.toggle(function(){
-			$instruction.animate({left: -304});
-			$instructionHandler.animate({left: -304 + initHandlerLeft})
-			$instructionHandler.html('收起提示');
-		}, function(){
-			$instruction.animate({left: 0});
-			$instructionHandler.animate({left: initHandlerLeft});
-			$instructionHandler.html('注意事项');
-		});
-	})();
-	
 });
 window.onbeforeunload = function(){
 	var alarmStr = '发布过程中，请不要离开!\n请点击 [ 取消 ] 或 [ 留在此页 ] ';
@@ -659,133 +443,115 @@ $(function(){
 
 {% block content %}
 {% csrf_token %}
-<div class="wrap" id="firstWrap">
-	<div id="instruction" >
-		<ul id="instructionUl">
-			<li>版本发布只能上传war包。</li>
-			<li>补丁发布只能上传zip压缩文件。</li>
-			<li>补丁的文件名请以“<b style="color:red">-todo</b>”或“<b style="color:red">-pending</b>”结尾。</li>
-			<li>进行发布或回滚的过程中，请不要离开此页面或进行解锁操作。</li>
-			<li>请不要在补丁中使用中文做文件名。</li>
-			<li>发布完成后，除了页面弹出框的提示，还要依据log的内容来判断发布是否成功。</li>
-			<li>离开此页面时，请记得解锁。如果没有解锁，可在首页进行解锁操作。</li>
-		</ul>
-	</div>
-	<div id="secondWrap" class="second_wrap">
-		<div id="instructionHandler">
-			注意事项
-		</div>
-		<h2>发布工程</h2>
-		<div class="sect_wrap">
-			<ul class="deploy_init_info">
-				<li>发布工程: <b>{{project.name}}</b></li>
-				<li>版&nbsp;本&nbsp;号: <b>{{version}}</b></li>
-				<li>发布方式: <b>{{deployType}}</b></li>
-				<li>补丁分组: <b>
+
+<div class="wrap">
+	<h2 style="text-align: center;">发布工程</h2>
+	<div style="width: 490px; text-align: left; margin:30px auto 10px;">
+		<table class="table table-bordered">
+			<tbody>
+				<tr>
+					<td>发布工程:</td>
+					<td>{{project.name}}</td>
+				</tr>
+				<tr>
+					<td>版本号:</td>
+					<td>{{version}}</td>
+				</tr>
+				<tr>
+					<td>发布方式:</td>
+					<td>{{deployType}}</td>
+				</tr>
+				<tr>
+					<td>补丁分组:</td>
+					<td>
 					{% if patchGroup %}
 						{{patchGroup.name}} ({{patchGroup.check_code}})
 					{% else %}
 						无
-					{% endif %}</b>
-				</li>
-			</ul>
-			<br/>
-			<div class="upload_area" id="downloadProjectFileWrap" style="display:none;">
-				<br/>
-				<input type="button" value="下载工程文件" id="toggleDownloadProjectFileBtn"/>
-				<div id="downloadProjectFileArea" style="display:none; padding-top: 20px;">
-					<input type="button" value="下载文件" id="downloadProjectFileBtn"/>
-					<div id="fileTreeWrap">
-						<ul id="fileTree" class="ztree"></ul>
-					</div>
-				</div>
-				<div style="display:none">
-					<iframe name="downloadFileFrame"></iframe>
-				</div>
-				<br/>
-			</div>
-			<div class="upload_area">
-				<br/>
-				<!-- 机制尚不完全确定，暂时在这里写死 -->
-				<label id="serverGroupLbl" style="color: #069">无宕机选项:</label>
-				<select id="serverGroupSel" style="font-size: 16px;">
-					<option value="ab">全部</option>
-					<option value="a">a组</option>
-					<option value="b">b组</option>
-				</select>
-				<br/>
-				<label>上传文件:</label>
-				<input type="file" name="deployItemField" id="deployItemField"/>
-				<input type="button" value="上传" id="uploadBtn"/>
-				<br/>
-				<label>文件上传状态:</label>
-				<span class="desc" id="uploadResult">尚未上传文件</span>
-				<br/>
-				<div id="uploadDetailWrap">
-					<label></label>
-					<span class="desc" id="uploadFilename"></span>
-					<br/>
-					<label></label>
-					<span class="desc" id="uploadFileSize"></span>
-				</div>
-			</div>
-		</div>
-		<div class="sect_wrap">
-			<div class="check_area">
-				<input type="button" value="解压补丁文件" id="decompressBtn"/>
-				<input type="button" value="更新readme" id="toggleReadmeUpdateBtn"/>
-				<div id="readmeUpdateArea" style="display:none; padding-top:20px;">
-					<input type="file" name="readmeField" id="readmeField"/>
-					<input type="button" value="上传新的readme" id="uploadReadmeBtn"/>
-				</div>
-				<div style="padding-top: 20px;">
-					<label>README</label>
-					<br/>
-					<textarea id="readmeContent" readonly="readonly">{{readmeContent}}</textarea>
-				</div>
-				<div style="padding-top: 20px;" id="fileListWrap">
-					<label>文件列表</label>
-					<br/>
-					<table id="fileListTbl" border="1" cellspacing="0" style="width: 800px;">
-						<thead>
-							<tr><th>文件路径</th></tr>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
-				<div style="padding-top: 20px;" id="conflict_file_info_list" >
-					<label>冲突详情</label>
-					<table id="conflictFileInfoTbl" border="1" cellspacing="0">
-						<thead>
-							<tr>
-								<th width="600">文件路径</th>
-								<th width="200">冲突补丁组</th>
-							</tr>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
-				</div>
-				<div style="padding-top: 20px;">
-					<input type="button" value="发布" id="startDeployBtn" _disabled="disabled"/>
-					<input type="button" value="回滚" id="startRollbackBtn" _disabled="disabled"/>
-					{% if patchGroup and patchGroup.status == 'testing' %}
-						{% if user.is_superuser %}
-						<input type="button" value="补丁组发布" id="startBackupBtn" _disabled="disabled"/>
-						{% endif %}
 					{% endif %}
-					<span style="font-size: 20px;" id="deployStatus"></span>
-				</div>
-				<div style="padding-top: 20px;">
-					<label>LOG</label>
-					<br/>
-					<textarea id="logContent" readonly="readonly" style="height: 400px;"></textarea>
-				</div>
-				<div style="padding-top: 20px;">
-					<input type="button" id="unlockAndLeave" value="解锁并返回首页"/>
-				</div>
-			</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div style="width: 800px; margin: 20px auto 10px;">
+		<table style="width: 800px; margin: 30px auto;">
+			<tbody>
+				<tr>
+					<td style="width: 170px; font-size: 16px; padding-bottom: 10px;">
+						<strong>无宕机选项:&nbsp;&nbsp;</strong>
+					</td>
+					<td>
+						<select id="serverGroupSel" style="font-size: 16px;">
+							<option value="ab" selected="selected">全部</option>
+							<option value="a">a组</option>
+							<option value="b">b组</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td style="font-size: 16px; padding-bottom: 10px;">
+						<strong>上传文件:&nbsp;&nbsp;</strong>
+					</td>
+					<td>
+						<div style="display: inline-block;" id="fileuploadWidget"></div>
+						<div style="display:inline-block;">
+							<button type="button" id="uploadBtn" class="btn btn-primary" style="width: 80px; margin-bottom: 10px;">上&nbsp;&nbsp;传</button>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		<!-- 显示补丁或war的上传结果 -->
+		<div id="uploadResultWrap" style="text-align: center;"></div>
+	
+		<div style="text-align: center;">
+			<button type="button" class="btn btn-primary" id="decompressBtn">解压补丁文件</button>
+		</div>
+		
+		<!-- readme 显示 -->
+		<h3>README</h3>
+		<pre id="readmeContent" style="width: 781px; height: 280px; overflow: auto; font-size: 15px;">{{readmeContent}}</pre>
+		
+		<!-- 文件列表 -->
+		<h3>文件列表</h3>
+		<table id="fileListTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 800px;;">
+			<thead>
+				<tr><th>文件路径</th></tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		
+		<!-- 文件冲突列表 -->
+		<h3>冲突详情</h3>
+		<table id="conflictFileInfoTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 800px;">
+			<thead>
+				<tr>
+					<th width="600">文件路径</th>
+					<th width="200">冲突补丁组</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		<div id="deployBtnWrap" style="text-align: center;">
+			<button type="button" class="btn btn-primary" style="width:80px; margin: 0px 10px;" id="startDeployBtn">发&nbsp;&nbsp;布</button>
+			<button type="button" class="btn btn-primary" style="width:80px; margin: 0px 10px;" id="startRollbackBtn">回&nbsp;&nbsp;滚</button>
+			{% if patchGroup and patchGroup.status == 'testing' %}
+				{% if user.is_superuser %}
+				<button type="button" class="btn btn-primary" style="width: 120px; margin: 0px 10px;" id="startBackupBtn">补丁组发布</button>
+				{% endif %}
+			{% endif %}
+			<div style="display: inline-block;" id="deployStatus"></div>
+		</div>
+		
+		<!-- 文件冲突列表 -->
+		<h3>发布日志</h3>
+		<pre id="logContent" style="width: 781px; height: 400px; overflow: auto; font-size: 15px;"></pre>
+		<div style="text-align: center; margin: 30px auto;">
+			<button type="button" class="btn btn-primary" id="unlockAndLeave">解锁并返回首页</button>
 		</div>
 	</div>
 </div>
