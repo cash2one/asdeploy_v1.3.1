@@ -76,9 +76,6 @@ $(function(){
 					var size = data.size;
 					for(i=0; i <=sizeUnits.length && size > 1024; size = (size/1024).toFixed(2), i++);
 					var sizeStr = size + sizeUnits[i];
-					//$('#uploadResult').html('文件上传成功!').css({color: 'green'});
-					//$('#uploadFilename').html('文  件  名: ' + data.filename).css({color: 'green'});;
-					//$('#uploadFileSize').html('文件大小: ' + sizeStr).css({color: 'green'});
 					var $alert = $('<div>').addClass('alert alert-success').html([
 						'文件上传成功!',
 						'文  件  名: <strong>' + data.filename + '</strong>',
