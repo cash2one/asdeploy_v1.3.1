@@ -20,6 +20,7 @@
 <script>
 $(function(){
 	var csrfToken = $('input[name=csrfmiddlewaretoken]').val();
+	// 初始化文件上传控件, ie下貌似还是有问题
 	$('#fileuploadWidget').bootstrapFileInput({
 		width: '500px',
 		btnWidth: '80px',
@@ -27,9 +28,8 @@ $(function(){
 		fileInputName: 'deployItemField'
 	});
 	// 无宕机选项
-	if('{{project.name}}' != 'as-web'){
-		$('#serverGroupLbl').css({display: 'none'});
-		$('#serverGroupSel').css({display: 'none'});
+	if('{{project.name}}' == 'as-web'){
+		$('#serverGroupWrap').show();
 	} 
 	$('#uploadBtn').click(function(){
 		var $this = $(this);
@@ -70,19 +70,16 @@ $(function(){
 				patchGroupId: '{{patchGroupId}}'
 			},
 			success: function (data, status){
-				$uploadResultWrap.children().remove();
 				if(typeof data == 'object' && data.isSuccess === true){
 					var sizeUnits = ['byte', 'kb', 'MB', 'GB']
 					var size = data.size;
 					for(i=0; i <=sizeUnits.length && size > 1024; size = (size/1024).toFixed(2), i++);
 					var sizeStr = size + sizeUnits[i];
-					var $alert = $('<div>').addClass('alert alert-success').html([
+					showAlert($uploadResultWrap, [
 						'文件上传成功!',
 						'文  件  名: <strong>' + data.filename + '</strong>',
 						'文件大小: <strong>' + sizeStr + '</strong>'
-					].join('<br/>'));
-					$alert.prepend('<button type="button" class="close" data-dismiss="alert">&times;</button>');
-					$uploadResultWrap.append($alert);
+					].join('<br/>'), 'success');
 				}else{
 					this.error(data, status);
 					return;
@@ -90,25 +87,17 @@ $(function(){
 				$this.html('上&nbsp;&nbsp;传').attr({disabled: false});
 			},
 			error: function(data, status, e){
-				var $alert = $('<div>').addClass('alert alert-error').html(data.errorMsg || '文件上传失败!');
-				$alert.prepend('<button type="button" class="close" data-dismiss="alert">&times;</button>');
-				$uploadResultWrap.append($alert);
+				showAlert($uploadResultWrap, data.errorMsg || '文件上传失败!', 'error');
 				$this.html('上&nbsp;&nbsp;传').attr({disabled: false});
 			}
 		});
 		return false;
 	});
 	
-	if('{{deployType}}' == 'patch'){
-		$('#toggleReadmeUpdateBtn').attr({disabled: true}).css({display: 'none'});
-		$('#uploadReadmeBtn').attr({disabled: true}).css({display: 'none'});
-		$('#readmeField').css({display: 'none'});
-	}
-	
 	if('{{deployType}}' == 'war'){
 		$('#decompressBtn').attr({disabled: true}).css({display: 'none'});
 		$('#fileListWrap').css({display: 'none'});
-		$('#conflict_file_info_list').css({display: 'none'});
+		$('#conflictFileInfoWrap').css({display: 'none'});
 	}
 	$('#decompressBtn').click(function(){
 		$('#decompressBtn').html('解&nbsp;压&nbsp;中').attr({disabled:true});
@@ -160,11 +149,30 @@ $(function(){
 		})
 	});
 	
+	// 发布启动和状态相关
+	
+	function showAlert(wrap, msg, status, closable){
+		var $wrap = $.type(wrap) == 'string'? $('#' + wrap): wrap;
+		if($wrap.size() == 0) {
+			return;
+		}
+		$wrap.children().remove();
+		var $alert = $('<div class="alert">');
+		$alert.html(msg);
+		if(closable !== false) {
+			$alert.prepend('<button type="button" class="close" data-dismiss="alert">&times;</button>');
+		}
+		if(status) {
+			$alert.addClass('alert-' + status);
+		}
+		$wrap.append($alert);
+	}
+	
 	$('#startBackupBtn').click(function(){
 		var $this = $(this);
 		$('#startDeployBtn').attr({disabled: true});
 		$('#startRollbackBtn').attr({disabled: true});
-		$this.val('补丁组发布中').attr({disabled: true});
+		$this.html('补丁组发布中').attr({disabled: true});
 		$.post('/startDeploy/', {
 			recordId: '{{record.id}}',
 			deployType: '{{deployType}}',
@@ -181,8 +189,8 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			} else {
-				$('#deployStatus').html('补丁组发布启动成功').css({color: 'green'});
-				$('#logContent').val('');
+				showAlert('deployStatus', '补丁组发布启动成功', 'success');
+				$('#logContent').html('');
 			}
 			var logReadInterval = 1500;
 			setTimeout(readLogOnRealtime, logReadInterval);
@@ -199,11 +207,11 @@ $(function(){
 						alert('补丁组发布已完成!');
 						$('#startDeployBtn').attr({disabled: false});
 						$('#startRollbackBtn').attr({disabled: false});
-						$('#startBackupBtn').val('补丁组发布').attr({disabled: false});
+						$('#startBackupBtn').html('补丁组发布').attr({disabled: false});
 						if(data.deployResult === true){
-							$('#deployStatus').html('补丁组发布成功').css({color: 'green'});
+							showAlert('deployStatus', '补丁组发布成功', 'success');
 						}else{
-							$('#deployStatus').html('补丁组发布失败').css({color: 'red'});
+							showAlert('deployStatus', '补丁组发布失败', 'error');
 						}
 						return;
 					}
@@ -215,7 +223,7 @@ $(function(){
 								newLogInfoArr.push(data.logInfo[i]);
 							}
 						}
-						$logContent.val($logContent.val() + newLogInfoArr.join(''));
+						$logContent.html($logContent.html() + '<br/>' + newLogInfoArr.join('<br/>'));
 						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
 						setTimeout(readLogOnRealtime, logReadInterval)
 					}
@@ -228,14 +236,14 @@ $(function(){
 			$('#startDeployBtn').attr({disabled: false});
 			$('#startRollbackBtn').attr({disabled: false});
 			$('#startBackupBtn').attr({disabled: false});
-			$('#deployStatus').html('补丁组发布失败，请重新发布' + tip).css({color: 'red'});
+			showAlert('deployStatus', '补丁组发布失败，请重新发布', 'error');
 		}
 		
 	});
 	
 	$('#startDeployBtn').click(function(){
 		var $this = $(this);
-		$this.val('发布中').attr({disabled: true});
+		$this.html('发布中').attr({disabled: true});
 		$('#startRollbackBtn').attr({disabled: true});
 		$('#startBackupBtn').attr({disabled: true});
 		$.post('/startDeploy/', {
@@ -254,8 +262,8 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			}else{
-				$('#deployStatus').html('发布启动成功').css({color: 'green'});
-				$('#logContent').val('');
+				showAlert('deployStatus', '发布启动成功', 'success');
+				$('#logContent').html('');
 			}
 			var logReadInterval = 1500;
 			setTimeout(readLogOnRealtime, logReadInterval);
@@ -274,9 +282,9 @@ $(function(){
 						$('#startRollbackBtn').attr({disabled: false});
 						$('#startBackupBtn').attr({disabled: false});
 						if(data.deployResult === true){
-							$('#deployStatus').html('发布成功').css({color: 'green'});
+							showAlert('deployStatus', '发布成功', 'success');
 						}else{
-							$('#deployStatus').html('发布失败').css({color: 'red'});
+							showAlert('deployStatus', '发布失败', 'error');
 						}
 						return;
 					}
@@ -288,7 +296,7 @@ $(function(){
 								newLogInfoArr.push(data.logInfo[i]);
 							}
 						}
-						$logContent.val($logContent.val() + newLogInfoArr.join(''));
+						$logContent.html($logContent.html() + newLogInfoArr.join('<br/>'));
 						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
 						setTimeout(readLogOnRealtime, logReadInterval)
 					}
@@ -301,7 +309,7 @@ $(function(){
 			$('#startDeployBtn').html('重新发布').attr({disabled: false});
 			$('#startRollbackBtn').attr({disabled: false});
 			$('#startBackupBtn').attr({disabled: false});
-			$('#deployStatus').html('发布失败，请重新发布' + tip).css({color: 'red'});
+			showAlert('deployStatus', '发布失败，请重新发布' + tip, 'error');
 		}
 	});
 	
@@ -311,7 +319,7 @@ $(function(){
 	}
 	$('#startRollbackBtn').click(function(){
 		var $this = $(this);
-		$this.val('回滚中').attr({disabled: true});
+		$this.html('回滚中').attr({disabled: true});
 		$('#startDeployBtn').attr({disabled: true});
 		$('#startBackupBtn').attr({disabled: true});
 		$.post('/startRollback/', {
@@ -329,8 +337,8 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			}else{
-				$('#deployStatus').html('回滚启动成功').css({color: 'green'});
-				$('#logContent').val('');
+				showAlert('deployStatus', '回滚启动成功', 'success');
+				$('#logContent').html('');
 			}
 			var logReadInterval = 1500;
 			setTimeout(readLogOnRealtime, logReadInterval);
@@ -350,9 +358,9 @@ $(function(){
 						$('#startDeployBtn').attr({disabled: false});
 						$('#startBackupBtn').attr({disabled: false});
 						if(data.deployResult === true){
-							$('#deployStatus').html('回滚成功').css({color: 'green'});
+							showAlert('deployStatus', '回滚成功', 'success');
 						}else{
-							$('#deployStatus').html('回滚失败').css({color: 'red'});
+							showAlert('deployStatus', '回滚失败', 'error');
 						}
 						return;
 					}
@@ -364,7 +372,7 @@ $(function(){
 								newLogInfoArr.push(data.logInfo[i]);
 							}
 						}
-						$logContent.val($logContent.val() + newLogInfoArr.join(''));
+						$logContent.html($logContent.html() + newLogInfoArr.join('<br/>'));
 						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
 						setTimeout(readLogOnRealtime, logReadInterval)
 					}
@@ -377,7 +385,7 @@ $(function(){
 			$('#startRollbackBtn').val('回滚').attr({disabled: false});
 			$('#startDeployBtn').attr({disabled: false});
 			$('#startBackupBtn').attr({disabled: false});
-			$('#deployStatus').html('回滚失败，请重新发布' + tip).css({color: 'red'});
+			showAlert('deployStatus', '回滚失败，请重新发布' + tip, 'error');
 		}
 	});
 	
@@ -474,7 +482,7 @@ $(function(){
 	<div style="width: 800px; margin: 20px auto 10px;">
 		<table style="width: 800px; margin: 30px auto;">
 			<tbody>
-				<tr>
+				<tr id="serverGroupWrap" style="display: none;">
 					<td style="width: 170px; font-size: 16px; padding-bottom: 10px;">
 						<strong>无宕机选项:&nbsp;&nbsp;</strong>
 					</td>
@@ -512,27 +520,34 @@ $(function(){
 		<pre id="readmeContent" style="width: 781px; height: 280px; overflow: auto; font-size: 15px;">{{readmeContent}}</pre>
 		
 		<!-- 文件列表 -->
-		<h3>文件列表</h3>
-		<table id="fileListTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 800px;;">
-			<thead>
-				<tr><th>文件路径</th></tr>
-			</thead>
-			<tbody>
-			</tbody>
-		</table>
+		<div id="fileListWrap">
+			<h3>文件列表</h3>
+			<table id="fileListTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 800px;;">
+				<thead>
+					<tr><th>文件路径</th></tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+		
 		
 		<!-- 文件冲突列表 -->
-		<h3>冲突详情</h3>
-		<table id="conflictFileInfoTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 800px;">
-			<thead>
-				<tr>
-					<th width="600">文件路径</th>
-					<th width="200">冲突补丁组</th>
-				</tr>
-			</thead>
-			<tbody>
-			</tbody>
-		</table>
+		<div id="conflictFileInfoWrap">
+			<h3>冲突详情</h3>
+			<table id="conflictFileInfoTbl" class="table table-bordered table-condensed table-hover table-striped" style="width: 800px;">
+				<thead>
+					<tr>
+						<th width="600">文件路径</th>
+						<th width="200">冲突补丁组</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+		
+		<!-- 发布按钮 -->
 		<div id="deployBtnWrap" style="text-align: center;">
 			<button type="button" class="btn btn-primary" style="width:80px; margin: 0px 10px;" id="startDeployBtn">发&nbsp;&nbsp;布</button>
 			<button type="button" class="btn btn-primary" style="width:80px; margin: 0px 10px;" id="startRollbackBtn">回&nbsp;&nbsp;滚</button>
