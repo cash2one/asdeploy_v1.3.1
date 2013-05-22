@@ -46,7 +46,7 @@ $(function(){
 					name: opts.fileInputName
 				});
 			}
-			// safari内核浏览器无法触发file类型的input的click时间，所以只能用透明度为0的方式叠在按钮上
+			// safari内核浏览器无法触发file类型的input的click事件，所以只能用透明度为0的方式叠在按钮上
 			if($.browser.safari){
 				var $pathWrap = $('<div>').css({
 					display: 'inline-block', 
