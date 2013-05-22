@@ -5,6 +5,7 @@ import json
 import string
 import urllib
 import chardet
+import cgi
 from datetime import datetime, timedelta
 
 from django.core.cache import cache
@@ -133,7 +134,7 @@ def deploy_init_option_page(request):
             if deploy_type == DeployItem.WAR:
                 folder_path = _generate_upload_folder_path(project.name, version);
                 readme_content = _get_readme_content(folder_path)
-                _params['readmeContent'] = readme_content
+                _params['readmeContent'] = cgi.escape(readme_content)
             params = RequestContext(request, _params)
             
             if deploy_type == DeployItem.RESET:
@@ -273,7 +274,7 @@ def deploy_record_detail_page(request, record_id):
         
     params = RequestContext(request, {
         'record': record,
-        'readme': readme,
+        'readme': cgi.escape(readme),
         #'file_list_content': file_list_content,
         'file_list': file_list,
         'conflict_detail': conflict_detail,
@@ -298,7 +299,7 @@ def upload_readme(request):
         destination.close()
         readme_content = _get_readme_content(folderpath)
         params['isSuccess'] = True
-        params['readmeContent'] = readme_content
+        params['readmeContent'] = cgi.escape(readme_content)
     else:
         params['isSuccess'] = False
     return HttpResponse(json.dumps(params))
@@ -383,7 +384,7 @@ def decompress_item(request):
         if flag:
             file_list = _get_file_list(unziped_folder)
             params['isSuccess'] = True
-            params['readme'] = _get_readme_content(unziped_folder)
+            params['readme'] = cgi.escape(_get_readme_content(unziped_folder))
             params['fileList'] = file_list
         
         # 如果当前工程有配置关联的补丁组，则进行冲突检查
@@ -706,7 +707,11 @@ def read_deploy_log_on_realtime(request):
         log_reader_key = 'log_reader_' + record_id_str
         log_reader = cache.get(log_reader_key)
         if log_reader:
-            params['logInfo'] = log_reader.read_lines()
+            # 对读取的文件内容进行html转义
+            logInfoArr = [];
+            for line in log_reader.read_lines():
+                logInfoArr.append(cgi.escape(line))
+            params['logInfo'] = logInfoArr
             params['isFinished'] = False
             if cache.get('log_is_writing_' + record_id_str):
                 cache.set(log_reader_key, log_reader, 300)

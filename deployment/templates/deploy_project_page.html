@@ -549,14 +549,14 @@ $(function(){
 		
 		<!-- 发布按钮 -->
 		<div id="deployBtnWrap" style="text-align: center;">
-			<button type="button" class="btn btn-primary" style="width:80px; margin: 0px 10px;" id="startDeployBtn">发&nbsp;&nbsp;布</button>
-			<button type="button" class="btn btn-primary" style="width:80px; margin: 0px 10px;" id="startRollbackBtn">回&nbsp;&nbsp;滚</button>
+			<button type="button" class="btn btn-primary" style="width:100px; margin: 0px 10px;" id="startDeployBtn">发&nbsp;&nbsp;布</button>
+			<button type="button" class="btn btn-primary" style="width:100px; margin: 0px 10px;" id="startRollbackBtn">回&nbsp;&nbsp;滚</button>
 			{% if patchGroup and patchGroup.status == 'testing' %}
 				{% if user.is_superuser %}
 				<button type="button" class="btn btn-primary" style="width: 120px; margin: 0px 10px;" id="startBackupBtn">补丁组发布</button>
 				{% endif %}
 			{% endif %}
-			<div style="display: inline-block;" id="deployStatus"></div>
+			<div style="margin-top: 20px;" id="deployStatus"></div>
 		</div>
 		
 		<!-- 文件冲突列表 -->
