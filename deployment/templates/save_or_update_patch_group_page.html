@@ -21,6 +21,9 @@ body {
 form label {
 	font-size: 18px;
 }
+h2, h3{
+	font-family: "微软雅黑";
+}
 </style>
 <script type="text/javascript" src="/static_files/js/jquery.js"></script>
 <script src="/static_files/js/bootstrap.min.js"></script>
@@ -78,9 +81,9 @@ function getPatchGroupParams(){
 </head>
 <body>
 <div class="wrap">
-	<h2 style="text-align: center">
+	<h3 style="text-align: center">
 		{% if not patch_group.id %}新增{% else %}修改{%endif%}补丁组
-	</h2>
+	</h3>
 	<div style="margin-top:20px; margin-left:-10px;">
 		<form class="form-horizontal">
 			{% if patch_group.id %}
