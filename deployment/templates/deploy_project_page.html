@@ -223,7 +223,9 @@ $(function(){
 								newLogInfoArr.push(data.logInfo[i]);
 							}
 						}
-						$logContent.html($logContent.html() + '<br/>' + newLogInfoArr.join('<br/>'));
+						if(newLogInfoArr.length && newLogInfoArr[0]){
+							$logContent.html($logContent.html() + newLogInfoArr.join('<br/>'));
+						}
 						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
 						setTimeout(readLogOnRealtime, logReadInterval)
 					}
@@ -296,7 +298,9 @@ $(function(){
 								newLogInfoArr.push(data.logInfo[i]);
 							}
 						}
-						$logContent.html($logContent.html() + newLogInfoArr.join('<br/>'));
+						if(newLogInfoArr.length && newLogInfoArr[0]){
+							$logContent.html($logContent.html() + newLogInfoArr.join('<br/>'));
+						}
 						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
 						setTimeout(readLogOnRealtime, logReadInterval)
 					}
@@ -372,7 +376,9 @@ $(function(){
 								newLogInfoArr.push(data.logInfo[i]);
 							}
 						}
-						$logContent.html($logContent.html() + newLogInfoArr.join('<br/>'));
+						if(newLogInfoArr.length && newLogInfoArr[0]){
+							$logContent.html($logContent.html() + newLogInfoArr.join('<br/>'));
+						}
 						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
 						setTimeout(readLogOnRealtime, logReadInterval)
 					}
