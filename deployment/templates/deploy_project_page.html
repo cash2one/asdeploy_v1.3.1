@@ -139,7 +139,7 @@ $(function(){
 				}
 				$fileListTblBody.find('tr td:nth-child(1)').each(function(i, v){
 					if(conflict_dict[v.innerHTML] === true) {
-						v.style.backgroundColor = '#f88';
+						$(v).parent().addClass('error');
 					}
 				});
 				alert('解压缩成功!');
