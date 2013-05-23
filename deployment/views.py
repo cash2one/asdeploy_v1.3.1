@@ -274,7 +274,7 @@ def deploy_record_detail_page(request, record_id):
         
     params = RequestContext(request, {
         'record': record,
-        'readme': cgi.escape(readme),
+        'readme': readme,
         #'file_list_content': file_list_content,
         'file_list': file_list,
         'conflict_detail': conflict_detail,
