@@ -189,7 +189,7 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			} else {
-				showAlert('deployStatus', '补丁组发布启动成功', 'success');
+				showAlert('deployStatus', '补丁组发布启动成功', 'info');
 				$('#logContent').html('');
 			}
 			var logReadInterval = 1500;
@@ -262,7 +262,7 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			}else{
-				showAlert('deployStatus', '发布启动成功', 'success');
+				showAlert('deployStatus', '发布启动成功', 'info');
 				$('#logContent').html('');
 			}
 			var logReadInterval = 1500;
@@ -337,7 +337,7 @@ $(function(){
 				failedInDeployProcess(result.errorMsg);
 				return;
 			}else{
-				showAlert('deployStatus', '回滚启动成功', 'success');
+				showAlert('deployStatus', '回滚启动成功', 'info');
 				$('#logContent').html('');
 			}
 			var logReadInterval = 1500;
