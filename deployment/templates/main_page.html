@@ -29,7 +29,7 @@ $(function(){
 	<div style="width: 400px; height: 100px;; margin: 30px auto 10px; text-align: center;">
 		{% if curLock %}
 			<div class="alert alert-error" style="font-size:16px;">
-			  发布流程已被<strong>zyang</strong>锁定
+			  发布流程已被<strong>{{curLock.user.username}}</strong>锁定
 			</div>
 			{% if user.id == curLock.user.id or user.is_superuser %}
 				<button id="unlock_deploy_btn" type="button" class="btn btn-primary">解锁</button>
