@@ -33,7 +33,7 @@ $(function(){
 		});
 	});
 	// 如果测试环境未基于最新的备份源，则在页面上进行闪烁提示
-	$.getJSON('/hasNewBackupSourceForCurrentEnv/', function(data){
+	/*$.getJSON('/hasNewBackupSourceForCurrentEnv/', function(data){
 		if(!data || !data.hasNew) {
 			return;
 		}
@@ -56,6 +56,13 @@ $(function(){
 			return blinkExec;
 		})($('#tipContent'));
 		blink();
+	});*/
+	
+	$.getJSON('/hasNewBackupSourceForCurrentEnv/', function(data){
+		if(!data || !data.hasNew) {
+			return;
+		}
+		$('#tipWrap').show();
 	});
 	
 });
@@ -74,10 +81,13 @@ $(function(){
 		<a href="/register">注册</a>
 	{% endif %}
 </div>
-<div id="tipWrap" style="padding-top: 25px; text-align: center; color: red; visibility: hidden">
+<!--div id="tipWrap" style="padding-top: 25px; text-align: center; color: red; _visibility: hidden">
 	<h2 id="tipContent">
 		在补丁上线前，请务必用最新备份源【重置】当前测试环境，并重新发布补丁进行测试！
 	</h2>
+</div-->
+<div id="tipWrap" class="alert alert-error" style="font-size: 20px; width: 800px; text-align:center; margin: 20px auto 20px; visibility: hidden">
+		在补丁上线前，请务必用最新备份源【重置】当前测试环境，并重新发布补丁进行测试！
 </div>
 {% block content %}{% endblock %}
 <!-- footer -->
