@@ -1,56 +1,147 @@
 {% extends "base.html" %}
 
 {% block style %}
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/static_files/css/custom-theme/jquery-ui-1.10.0.custom.css"/>
 <style>
-	div.wrap {
-		text-align: center;
-		padding-top: 100px;
-	}
-	div.wrap label{
-		display: inline-block;
-		width: 150px;
-		text-align: right;
-		margin-left: -80px;
-	}
-	div.wrap form {
-		margin-left: -20px;
-	}
-	div.wrap p {
-		margin-top: 0px;
-	}
-	.error_info {
-		font-size:25px;
-		color: red;
-	}
-	.errorlist{
-		list-style:none;
-		font-size:15px;
-		color: red;	
-	}
-	ul.errorlist{
-		margin: 0px;
-		padding: 0px;
-	}
-	ul.errorlist li {
-	}
-	.btn {
-		font-size: 16px;
-	}
+input[type="text"], input[type="password"] {
+	font-size: 16px;
+	width: 180px;
+}
+#login_tbl .alert {
+	margin: 0px auto 10px;
+	text-align: center;
+	width: 250px;
+	padding-left: 10px;
+	padding-right: 10px;
+} 
 </style>
+{% endblock %}
+
+{% block native_js%}
+<script src="/static_files/js/bootstrap.min.js"></script>
+<script src="/static_files/js/jquery-ui-1.10.0.custom.min.js"></script>
 {% endblock %}
 
 {% block content %}
 <div class="wrap">
-	<h1>用户注册</h1>
-	{% if error_message %}
-	<span class="error_info">{{error_message}}</span>
-	{% endif %}
-	<form method="post" action=".">
-		{% csrf_token %}
-		{{ form.as_p }}
-		<span style="display:inline-block; width: 20px;"></span>
-		<input class="btn" type="submit" value="注册"/>
-		<input class="btn" type="button" value="返回" onclick="window.location.href='/login/'"/>
-	</form>
+	<h2 style="text-align: center;">用户注册</h2>
+	<!-- 不会做国际化，form.username.errors用的也很烂 -->
+	<div style="width: 400px; margin: 50px auto;">
+		<form method="post" action=".">
+			{% csrf_token %}
+			<table id="login_tbl" style="width: 400px;">
+				<tbody>
+					{% if form.username.errors %}
+					<tr>
+						<td colspan="2">
+							<div class="alert alert-error">
+							{% for error in form.username.errors %}
+								{% if error == 'This field is required.'%}
+									用户名不能为空！
+								{% else %}
+									{{error}}
+								{% endif %}
+							{% endfor %}
+							</div>
+						</td>
+					</tr>
+					{% endif %}
+					<tr>
+						<td style="padding-bottom: 10px; width: 140px; text-align: right;">
+							<label for="id_username" style="font-size:18px; ">
+								<strong>用户名:&nbsp;&nbsp;</strong>
+							</label>
+							<td>
+								{{ form.username }}
+							</td>
+						</td>
+					</tr>
+					{% if form.email.errors %}
+					<tr>
+						<td colspan="2">
+							<div class="alert alert-error">
+							{% for error in form.email.errors %}
+								{% if error == 'This field is required.'%}
+									邮箱不能为空！
+								{% else %}
+									{{error}}
+								{% endif %}
+							{% endfor %}
+							</div>
+						</td>
+					</tr>
+					{% endif %}
+					<tr>
+						<td style="padding-bottom: 10px; width: 140px; text-align: right;">
+							<label for="id_email" style="font-size:18px; ">
+								<strong>邮&nbsp;&nbsp;&nbsp;&nbsp;箱:&nbsp;&nbsp;</strong>
+							</label>
+							<td>
+								{{ form.email }}
+							</td>
+						</td>
+					</tr>
+					{% if form.password1.errors %}
+					<tr>
+						<td colspan="2">
+							<div class="alert alert-error">
+							{% for error in form.password1.errors %}
+								{% if error == 'This field is required.'%}
+									密码不能为空！
+								{% else %}
+									{{error}}
+								{% endif %}
+							{% endfor %}
+							</div>
+						</td>
+					</tr>
+					{% endif %}
+					<tr>
+						<td style="padding-bottom: 10px; width: 140px; text-align: right;">
+							<label for="id_password1" style="font-size:18px; ">
+								<strong>密&nbsp;&nbsp;&nbsp;&nbsp;码:&nbsp;&nbsp;</strong>
+							</label>
+							<td>
+								{{ form.password1 }}
+							</td>
+						</td>
+					</tr>
+					{% if form.password2.errors %}
+					<tr>
+						<td colspan="2">
+							<div class="alert alert-error">
+							{% for error in form.password2.errors %}
+								{% if error == 'This field is required.'%}
+									密码不能为空！
+								{% else %}
+									{{error}}
+								{% endif %}
+							{% endfor %}
+							</div>
+						</td>
+					</tr>
+					{% endif %}
+					<tr>
+						<td style="padding-bottom: 10px; width: 140px; text-align: right;">
+							<label for="id_password2" style="font-size:18px; ">
+								<strong>确认密码:&nbsp;&nbsp;</strong>
+							</label>
+							<td>
+								{{ form.password2 }}
+							</td>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2" style="text-align: center; padding-top: 30px;">
+							<button class="btn" type="submit" style="width: 80px;">注&nbsp;&nbsp;册</button>
+							<div style="width: 10px; display: inline-block;">&nbsp;</div>
+							<button class="btn" type="button" style="width: 80px;" onclick="window.location.href='/login/'">返&nbsp;&nbsp;回</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</form>
+	</div>
 </div>
 {% endblock %}
