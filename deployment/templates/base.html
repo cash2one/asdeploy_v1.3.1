@@ -62,7 +62,7 @@ $(function(){
 		if(!data || !data.hasNew) {
 			return;
 		}
-		$('#tipWrap').show();
+		$('#tipWrap').css({visibility:''});
 	});
 	
 });
@@ -87,7 +87,7 @@ $(function(){
 	</h2>
 </div-->
 <div id="tipWrap" class="alert alert-error" style="font-size: 20px; width: 800px; text-align:center; margin: 20px auto 20px; visibility: hidden">
-		在补丁上线前，请务必用最新备份源【重置】当前测试环境，并重新发布补丁进行测试！
+		在补丁上www前，请务必用最新备份源【重置】当前测试环境，并重新发布补丁进行测试！
 </div>
 {% block content %}{% endblock %}
 <!-- footer -->
