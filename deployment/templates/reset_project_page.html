@@ -1,138 +1,50 @@
 {% extends "base.html" %}
 {% block style %}
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/static_files/css/custom-theme/jquery-ui-1.10.0.custom.css"/>
 <style>
-	div.wrap {
-		text-align: center;
-		padding-top: 50px;
-		width: 800px;
-		margin: 0px auto;
-		position: relative;
-	}
-	div.sect_wrap {
-		width: 800px;
-		text-align: left;
-		margin: 0px auto 20px;
-	}
-	div.sect_wrap input {
-		font-size: 16px;
-	}
-	div.sect_wrap label {
-		display: inline-block;
-		width: 150px;
-		font-size: 20px;
-	}
-	div.sect_wrap textarea {
-		font-size: 20px;
-		width: 800px;
-		height: 200px;
-	}
-	ul.deploy_init_info {
-		list-style: none;
-		font-size: 20px;
-		margin: 0px;
-		padding: 0px;
-		display: inline-block;
-		width: 600px;
-	}
-	div.upload_area .desc {
-		font-size: 20px;
-	}
-
-	.second_wrap {
-		width: 800px;
-		margin: 0px auto;
-		background-color: #fff;
-	}
-	#instruction {
-		position: absolute; 
-		width: 300px; 
-		top: 120px;
-		border: 1px solid #333;
-		z-index: -1;
-	}
-	#instructionHandler {
-		position: absolute; 
-		width: 30px; 
-		height: 110px; 
-		border: 1px solid #333; 
-		left: -34px; 
-		font-size: 20px;
-		background-color: #ccc;
-		padding-top: 10px;
-		top: 120px;
-		cursor: pointer;
-		border-radius: 10px 0px 0px 10px;
-	}
-	#instructionUl {
-		text-align: left;
-		font-size: 20px;
-		padding-right: 20px;
-	}
-	#instructionUl li {
-		margin-bottom: 10px;
-	}
-	
-	ul.option_wrap {
-		padding: 0px;
-		width: 800px;
-		list-style: none;
-		border: 1px solid #333;
-	}
-	
-	ul.option_wrap li {
-		font-size: 20px;
-		padding: 5px;
-		margin: 0px;
-		cursor: pointer;
-	}
+.alert {
+	font-size: 16px;
+}
+#sourceFilenameWrap td {
+	cursor: pointer;
+}
+#sourceFilenameWrap td.active {
+	color: #fff;
+	font-weight: bold;
+	background-color: #ccc;
+}
 </style>
+
 {% endblock %}
 
 {% block native_js %}
+<script src="/static_files/js/bootstrap.min.js"></script>
 <script>
-(function($){
-    $.fn.preventScroll = function(){
-        var _this = this.get(0);
-        if($.browser.mozilla){
-            _this.addEventListener('DOMMouseScroll',function(e){
-                _this.scrollTop += e.detail > 0 ? 60 : -60;   
-                e.preventDefault();
-            },false); 
-        }else{
-            _this.onmousewheel = function(e){   
-                e = e || window.event;   
-                _this.scrollTop += e.wheelDelta > 0 ? -60 : 60;   
-                e.returnValue = false  
-            };
-        }
-        return this;
-    };
-})(jQuery);
 $(function(){
 	var csrfToken = $('input[name=csrfmiddlewaretoken]').val();
 	
-	$liArr = $('#source_filename_wrap').children('li')
-		.filter(':nth-child(2n+1)').css({'backgroundColor': '#eee'})
-		.end();
-	$liArr.click(function(){
-		$liArr.css({backgroundColor: '', color: '', fontWeight: ''})
-			.filter(':nth-child(2n+1)').css({'backgroundColor': '#eee'});
-		var $this = $(this).css({backgroundColor: '#999', color: '#fff', fontWeight: 'bolder'});
-		var sourceFilename = $this.html();
-		$('#sourceFilename').val(sourceFilename);
+	var $tdArr = $('#sourceFilenameWrap td');
+	$tdArr.click(function(){
+		$tdArr.removeClass('active');
+		var $this = $(this).addClass('active');
+		$('#sourceFilename').val($this.html());
 	});
 	
 	$('#obtainResetItemBtn').click(function(){
 		var $this = $(this);
+		var $startResetBtn = $('#startResetBtn');
 		$this.attr({disabled: true});
+		$startResetBtn.attr({disabled: true});
 		var isFinished = false;
 		var sourceFilename = $('#sourceFilename').val();
 		if(!sourceFilename) {
 			alert('请选择备份源!');
 			return;
 		}
-		$('#obtainResult').html('');
 		var sizeUnits = ['byte', 'kb', 'MB', 'GB'];
+		var $obtainResult = $('#obtainResult');
+		var $curFileSize = $('#curFileSize');
 		$.post('/obtainResetItem/', {
 			projId: '{{project.id}}',
 			recordId: '{{record.id}}',
@@ -144,19 +56,23 @@ $(function(){
 				result = $.parseJSON(data);
 			} catch(e) {}
 			isFinished = true;
-			$('#curFileSize').html('');
 			if(!result || result.isSuccess !== true) {
-				$('#obtainResult').html(result.errorMsg).css({color: 'red'});
-				alert('备份源获取失败！');
+				showAlert($obtainResult, '备份源获取失败！ ' + result.errorMsg, 'error');
 			} else {
 				var size = result.size;
 				for(i=0; i <=sizeUnits.length && size > 1024; size = (size/1024).toFixed(2), i++);
 				var sizeStr = size + sizeUnits[i];
-				$('#obtainResult').html('备份源 [' + result.filename +'][' + sizeStr + '] 获取成功!').css({color: 'green'});
-				alert('备份源获取成功!');
+				var obtainResultMsg = '备份源 [' + result.filename +'][' + sizeStr + '] 获取成功!';
+				showAlert($obtainResult, obtainResultMsg, 'success');
 			}
+			$curFileSize.hide();
+			$obtainResult.show();
 			$this.attr({disabled: false});
+			$startResetBtn.attr({disabled: false});
 		});
+		$obtainResult.hide();
+		showAlert($curFileSize, '', 'info', false);
+		$curFileSize.show();
 		readFileSize();
 		function readFileSize(){
 			$.get('/readFileSize/', {
@@ -173,7 +89,7 @@ $(function(){
 					var size = result.size;
 					for(i=0; i <=sizeUnits.length && size > 1024; size = (size/1024).toFixed(2), i++);
 					var sizeStr = size + sizeUnits[i];
-					$('#curFileSize').html('[' + sourceFilename +'][' + sizeStr + ']');
+					$curFileSize.children('.alert-info').html('[' + sourceFilename +'][' + sizeStr + ']');
 				}
 			});
 			if(isFinished !== true){
@@ -183,6 +99,8 @@ $(function(){
 	});
 	
 	$('#startResetBtn').click(function(){
+		var $this = $(this);
+		$this.html('重置发布中').attr({disabled: true});
 		$.post('/startDeploy/', {
 			recordId: '{{record.id}}',
 			deployType: '{{deployType}}',
@@ -202,9 +120,8 @@ $(function(){
 				$('#obtainResetItemBtn').unbind('click').click(function(){
 					alert('本次发布流程已启动，无法再更改备份源文件!');
 				}); 
-				$('#startResetBtn').val('重置发布中').attr({disabled: true});
-				$('#deployStatus').html('重置发布启动成功').css({color: 'green'});
-				$('#logContent').val('');
+				showAlert('deployStatus', '发布启动成功', 'info');
+				$('#logContent').html('');
 			}
 			var logReadInterval = 1500;
 			setTimeout(readLogOnRealtime, logReadInterval);
@@ -219,11 +136,11 @@ $(function(){
 					}
 					if(data.isFinished === true){
 						alert('重置发布已完成!');
-						$('#startResetBtn').val('重置发布').attr({disabled: false});
+						$('#startResetBtn').html('重置发布').attr({disabled: false});
 						if(data.deployResult === true){
-							$('#deployStatus').html('重置发布成功').css({color: 'green'});
+							showAlert('deployStatus', '重置发布成功', 'success');
 						}else{
-							$('#deployStatus').html('重置发布失败').css({color: 'red'});
+							showAlert('deployStatus', '重置发布失败', 'success');
 						}
 						return;
 					}
@@ -235,7 +152,9 @@ $(function(){
 								newLogInfoArr.push(data.logInfo[i]);
 							}
 						}
-						$logContent.val($logContent.val() + newLogInfoArr.join(''));
+						if(newLogInfoArr.length && newLogInfoArr[0]){
+							$logContent.html($logContent.html() + newLogInfoArr.join('<br/>'));
+						}
 						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
 						setTimeout(readLogOnRealtime, logReadInterval)
 					}
@@ -245,8 +164,8 @@ $(function(){
 		
 		function failedInDeployProcess(errorMsg){
 			var tip = errorMsg? ' [ ' + errorMsg + ' ] ' : '';
-			$('#startDeployBtn').val('重置发布').attr({disabled: false});
-			$('#deployStatus').html('重置发布失败，请重新发布' + tip).css({color: 'red'});
+			$('#startDeployBtn').html('重置发布').attr({disabled: false});
+			showAlert('deployStatus', '重置发布失败，请重新发布' + tip, 'error');
 		}
 	});
 	
@@ -258,42 +177,6 @@ $(function(){
 		location.href = '/unlockDeploy';
 	});
 
-	// 注意事项
-	(function(){
-		var initTop = 120,
-			initHandlerLeft = -34,
-			$instruction = $('#instruction'),
-			$instructionHandler = $('#instructionHandler');
-		function slideAction(event){
-			var $this = $(document);
-			var top = $this.scrollTop() + initTop,
-				docHeight = document.documentElement.clientHeight;
-			if(top + $instruction.height() > docHeight + $this.scrollTop()){
-				top = docHeight + $this.scrollTop() - $instruction.height() - 30;
-				top < initTop && (top = initTop);
-			}
-			$instruction.stop().animate({
-				top: top
-			});
-			$instructionHandler.stop().animate({
-				top: top
-			})
-		}
-		window.onscroll = slideAction;
-		window.onresize = slideAction;
-		
-		// 不会布局造成的麻烦
-		$instructionHandler.toggle(function(){
-			$instruction.animate({left: -304});
-			$instructionHandler.animate({left: -304 + initHandlerLeft})
-			$instructionHandler.html('收起提示');
-		}, function(){
-			$instruction.animate({left: 0});
-			$instructionHandler.animate({left: initHandlerLeft});
-			$instructionHandler.html('注意事项');
-		});
-	})();
-	
 });
 window.onbeforeunload = function(){
 	var alarmStr = '发布过程中，请不要离开!\n请点击 [ 取消 ] 或 [ 留在此页 ] ';
@@ -340,67 +223,77 @@ function checkServerStatusForProject(projectName){
 $(function(){
 	//checkServerStatusForProject('{{project.name}}');
 });
+
+function showAlert(wrap, msg, status, closable){
+	var $wrap = $.type(wrap) == 'string'? $('#' + wrap): wrap;
+	if($wrap.size() == 0) {
+		return;
+	}
+	$wrap.children().remove();
+	var $alert = $('<div class="alert">');
+	$alert.html(msg);
+	if(closable !== false) {
+		$alert.prepend('<button type="button" class="close" data-dismiss="alert">&times;</button>');
+	}
+	if(status) {
+		$alert.addClass('alert-' + status);
+	}
+	$wrap.append($alert);
+}
+
 </script>
 {% endblock %}
 
 {% block content %}
 {% csrf_token %}
-<div class="wrap" id="firstWrap">
-	<div id="instruction" >
-		<ul id="instructionUl">
-			<li>版本发布只能上传war包。</li>
-			<li>补丁发布只能上传zip压缩文件。</li>
-			<li>补丁的文件名请以“<b style="color:red">-todo</b>”或“<b style="color:red">-pending</b>”结尾。</li>
-			<li>进行发布或回滚的过程中，请不要离开此页面或进行解锁操作。</li>
-			<li>请不要在补丁中使用中文做文件名。</li>
-			<li>发布完成后，除了页面弹出框的提示，还要依据log的内容来判断发布是否成功。</li>
-			<li>离开此页面时，请记得解锁。如果没有解锁，可在首页进行解锁操作。</li>
-		</ul>
-	</div>
-	<div id="secondWrap" class="second_wrap">
-		<div id="instructionHandler">
-			注意事项
-		</div>
-		<h2>发布工程</h2>
-		<div class="sect_wrap">
-			<ul class="deploy_init_info">
-				<li>发布工程: <b>{{project.name}}</b></li>
-				<li>版&nbsp;本&nbsp;号: <b>{{version}}</b></li>
-				<li>发布方式: <b>{{deployType}}</b></li>
-			</ul>
-			<br/>
-			<div class="upload_area">
-				<br/>
-				<label>选择备份源:</label>
-				<div id="source_select_area">
-					<ul id="source_filename_wrap" class="option_wrap">
+<div class="wrap">
+	<h2 style="text-align: center;">重置工程</h2>
+	<table class="table table-bordered" style="width: 450px; margin: 30px auto 10px;">
+		<tbody>
+			<tr>
+				<td>发布工程:</td>
+				<td>{{project.name}}</td>
+			</tr>
+			<tr>
+				<td>版本号:</td>
+				<td>{{version}}</td>
+			</tr>
+			<tr>
+				<td>发布方式:</td>
+				<td>{{deployType}}</td>
+			</tr>
+		</tbody>
+	</table>
+	
+	<div style="width: 800px; text-align: left; margin: 30px auto 10px;">
+		<h3>选择备份源</h3>
+		<div id="sourceFilenameWrap" style="margin-bottom: 20px;">
+			<table class="table table-bordered table-striped table-hover" style="text-align: center; margin: 0px auto; font-size: 16px;">
+				<tbody>
 					{% for source_filename in new_backup_source_list %}
-						<li>{{source_filename}}</li>
+						<tr><td>{{source_filename}}</td></tr>
 					{% endfor%}
-					</ul>
-				</div>
-				<input type="hidden" value="" id="sourceFilename" />
-				<input type="button" value="获取备份源" id="obtainResetItemBtn" />
-				<span style="font-size: 20px;" id="obtainResult"></span>
-				<span style="font-size: 20px;" id="curFileSize"></span>
-			</div>
+				</tbody>
+			</table>
+			<input type="hidden" value="" id="sourceFilename" />
 		</div>
-		<div class="sect_wrap">
-			<div class="check_area">
-				<div style="padding-top: 20px;">
-					<input type="button" value="重置发布" id="startResetBtn"/>
-					<span style="font-size: 20px;" id="deployStatus"></span>
-				</div>
-				<div style="padding-top: 20px;">
-					<label>LOG</label>
-					<br/>
-					<textarea id="logContent" readonly="readonly" style="height: 400px;"></textarea>
-				</div>
-				<div style="padding-top: 20px;">
-					<input type="button" id="unlockAndLeave" value="解锁并返回首页"/>
-				</div>
-			</div>
+		
+		<div id="obtainResult" style="display:none; text-align: center;"></div>
+		<div id="curFileSize" style="display: none; text-align: center;"></div>
+		
+		<div id="resetBtnWrap" style="text-align: center; margin-top: 20px;">
+			<button id="obtainResetItemBtn" type="button" class="btn btn-primary" style="margin: 0px 10px;">获取备份源</button>
+			<button id="startResetBtn" type="button" class="btn btn-inverse" style="margin: 0px 10px;">重置发布</button>
+			<div style="margin-top: 20px;" id="deployStatus"></div>
+		</div>
+		
+		<!-- 文件冲突列表 -->
+		<h3>日志</h3>
+		<pre id="logContent" style="width: 781px; height: 400px; overflow: auto; font-size: 15px;"></pre>
+		<div style="text-align: center; margin: 30px auto;">
+			<button type="button" class="btn btn-primary" id="unlockAndLeave">解锁并返回首页</button>
 		</div>
 	</div>
 </div>
+
 {% endblock %}
