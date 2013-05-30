@@ -4,10 +4,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>{% block title %}{% endblock %}</title>
-{% block style %}{% endblock %}
+<link rel="stylesheet" href="/static_files/css/bootstrap.min.css" />
 <link style="text/css" rel="stylesheet" href="/static_files/css/style.css" />
+{% block style %}{% endblock %}
 <script type="text/javascript" src="/static_files/js/jquery.js"></script>
 <script type="text/javascript" src="/static_files/js/ajaxsetup_for_django.js"></script>
+<script src="/static_files/js/bootstrap.min.js"></script>
 <script>
 $(function(){
 	$.getJSON('/checkVersionAndEnv/', function(data){
