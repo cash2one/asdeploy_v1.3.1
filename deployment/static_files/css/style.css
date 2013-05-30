@@ -18,3 +18,8 @@ table {
 h2, h3{
 	font-family: "微软雅黑";
 }
+
+#top_nav.navbar .nav > li > a {
+	padding-left:10px;
+	padding-right:10px;
+}

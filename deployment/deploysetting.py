@@ -43,7 +43,7 @@ else:
     ENVIRONMENT = 'localhost'
 
 # 版本
-VERSION = '1.3'
+VERSION = '1.3.1'
 
 # 数据库信息
 DB_PARAMS = {

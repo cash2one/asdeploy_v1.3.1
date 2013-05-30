@@ -72,7 +72,7 @@ $(function(){
 {% block native_js %}{% endblock %}
 </head>
 <body>
-<div id="nav">
+<!--div id="nav">
 	<span class="env_logo" id="env_logo"></span>&nbsp;
 	{% if user.is_authenticated %}
 		<a href="/">首页</a> |
@@ -82,7 +82,36 @@ $(function(){
 		<a href="/login">登录</a> |
 		<a href="/register">注册</a>
 	{% endif %}
+</div -->
+<div id="top_nav" class="navbar navbar-fixed-top">
+	<div class="navbar-inner">
+		<div class="row-fluid">
+			<div class="span4"></div>
+			<div class="span4">
+				<a class="brand" style="display: block; text-align: center; width:100%;"><strong>AbleSky代码发布系统 v1.3.1</strong></a>
+			</div>
+			<div class="span4">
+				<ul class="nav pull-right" style="color: #fff;">
+					<li><a id="env_logo" href="#" style="font-size: 20px"></a></li>
+					<li class="divider-vertical"></li>
+					{% if user.is_authenticated %}
+					<li><a href="/"><strong>首页</strong></a></li>
+					<li class="divider-vertical"></li>
+					<li><a href="/user/{{user.username}}"><strong>{{ user.username }}</strong></a></li>
+					<li class="divider-vertical"></li>
+					<li><a href="/logout" style="padding-right: 15px;"><strong>退出</strong></a></li>
+					{% else %}
+					<li><a href="/login"><strong>登录</strong></a></li>
+					<li class="divider-vertical"></li>
+					<li><a href="/register" style="padding-right: 15px;"><strong>注册</strong></a></li>
+					{% endif %}
+				</ul>
+			</div>
+			
+		</div>
+	</div>
 </div>
+<div style="margin-bottom: 70px;"></div>
 <!--div id="tipWrap" style="padding-top: 25px; text-align: center; color: red; _visibility: hidden">
 	<h2 id="tipContent">
 		在补丁上线前，请务必用最新备份源【重置】当前测试环境，并重新发布补丁进行测试！
