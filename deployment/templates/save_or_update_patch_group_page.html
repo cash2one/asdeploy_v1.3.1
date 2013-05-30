@@ -111,10 +111,10 @@ function getPatchGroupParams(){
 				<label class="control-label"><strong>状态:</strong></label>
 				<div class="controls">
 			    	<select name="status" id="status" style="width: 100px; font-size: 16px;">
+					<option value="testing">测试</option>
 					{% if not patch_group.id %}
 					<option value="created">创建</option>
 					{% endif %}
-					<option value="testing">测试</option>
 					{% if patch_group.id %}
 					<option value="stoped">停止</option>
 					{% endif %}
