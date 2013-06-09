@@ -147,7 +147,7 @@ function reloadPage(){
 							<option value="">全部</option>
 							<option value="created">已创建</option>
 							<option value="testing">测试中</option>
-							<option value="stoped">已停止</option> <!-- 把stoped当做完成吧 -->
+							<option value="stoped">已完成</option> <!-- 把stoped当做完成吧 -->
 							<option value="finished">已终结</option>
 						</select>
 					</td>
@@ -203,7 +203,7 @@ function reloadPage(){
 							<td>
 							{% if patch_group.status == 'created' %}已创建{% endif %}
 							{% if patch_group.status == 'testing' %}测试中{% endif %}
-							{% if patch_group.status == 'stoped' %}已停止{% endif %}
+							{% if patch_group.status == 'stoped' %}已完成{% endif %}
 							{% if patch_group.status == 'finished' %}已终结{% endif %}
 							</td>
 							<td>
