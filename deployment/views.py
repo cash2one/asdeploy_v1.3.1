@@ -1105,6 +1105,9 @@ def save_or_update_patch_group(request, patch_group_id = 0):
         patch_group.name = request.POST.get('name')
         patch_group.check_code = request.POST.get('check_code')
         patch_group.status = request.POST.get('status')
+        ## 根据使用方式的调整，补丁组状态设为stoped时，也设置finish_time
+        if patch_group.status == PatchGroup.STATUS_STOPED:
+            patch_group.finish_time = datetime.now()
         patch_group.save()
         params = {
             'isSuccess': True,
