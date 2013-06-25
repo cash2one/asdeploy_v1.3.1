@@ -110,7 +110,11 @@ function highlightConflict(){
 				<tr>
 					<td>{{conflict_info.conflict_patch_file.file_path}}</td>
 					<td>{{conflict_info.conflict_patch_file.file_type}}</td>
-					<td>{{conflict_info.conflict_patch_group.name}}</td>
+					<td>
+						<a href="/patchGroupDetail/{{conflict_info.conflict_patch_group.id}}/" target="_blank">
+						{{conflict_info.conflict_patch_group.name}}
+						</a>
+					</td>
 					<td>
 					{% if conflict_info.conflict_patch_group.status == 'created' %}
 						已创建
