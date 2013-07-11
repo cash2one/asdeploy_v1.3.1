@@ -619,6 +619,7 @@ def _check_conflict_of_file_path(patch_groups, current_patch_group_id, current_f
                 if pf.file_path == path:
                     conflict_file_path_list.append({
                         'file_path': path,
+                        'conflict_patch_group_id': patch_group.id,
                         'conflict_patch_group_name': patch_group.name
                     })
     return conflict_file_path_list

@@ -94,7 +94,11 @@ function highlightConflict(){
 				<tr>
 					<td>{{conflict_file_info.conflict_patch_file_path}}</td>
 					<td>{{conflict_file_info.conflict_patch_file_type}}</td>
-					<td>{{conflict_file_info.conflict_patch_group_name}}</td>
+					<td>
+						<a href="/patchGroupDetail/{{conflict_file_info.conflict_patch_group_id}}/" target="_blank">
+						{{conflict_file_info.conflict_patch_group_name}}
+						</a>
+					</td>
 					<td>测试中</td>
 				</tr>
 			{% endfor %}

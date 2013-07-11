@@ -128,7 +128,11 @@ $(function(){
 					for(var i=0, l=conflict_file_info_list.length; i<l; i++){
 						$conflict_tbody.append(
 							$('<tr>').append('<td>' + conflict_file_info_list[i].file_path + '</td>')
-								.append('<td>' + conflict_file_info_list[i].conflict_patch_group_name + '</td>')
+								.append('<td>' 
+									+ '<a href="/patchGroupDetail/' + conflict_file_info_list[i].conflict_patch_group_id + '/" target="_blank">'
+									+ conflict_file_info_list[i].conflict_patch_group_name 
+									+ '</a>'
+									+ '</td>')
 						);
 						conflict_dict[conflict_file_info_list[i].file_path] = true
 					}
