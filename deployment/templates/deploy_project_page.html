@@ -476,7 +476,9 @@ $(function(){
 					<td>补丁分组:</td>
 					<td>
 					{% if patchGroup %}
+						<a href="/patchGroupDetail/{{patchGroup.name.id}}/" target="_blank">
 						{{patchGroup.name}} ({{patchGroup.check_code}})
+						</a>
 					{% else %}
 						无
 					{% endif %}

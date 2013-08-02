@@ -123,7 +123,19 @@ $(function(){
 <div id="tipWrap" class="alert alert-error" style="font-size: 20px; width: 820px; text-align:center; margin: 20px auto 20px; visibility: hidden">
 		在补丁上www前，请务必用最新备份源【重置】当前测试环境，并重新发布补丁进行测试！
 </div>
-{% block content %}{% endblock %}
+{% if 1 == 1 %} 
+	{% block content %}{% endblock %}
+{% else %} {# maintaining#}
+	<div style="text-align: center;">
+		<div class="alert alert-info" style="width:500px; margin: 0px auto;">
+			<h1 style="display:inline-block">系统维护中
+				<span style="font-size:25px;">z</span>
+				<span style="font-size:30px;">z</span>
+				<span style="font-size:38px;">z</span>
+			</h1>
+		</div>
+	</div>
+{% endif %}
 <!-- footer -->
 <div style="height:40px;"></div>
 </body>
