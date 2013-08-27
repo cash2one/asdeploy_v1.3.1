@@ -113,7 +113,7 @@ $(function(){
 					$('#readmeContent').html(result.readme);
 				}
 				$fileListTblBody = $('#fileListTbl').children('tbody');
-				$fileListTblBody.children().remove();
+				$fileListTblBody.empty();
 				if($.isArray(result.fileList)){
 					for(var i=0, l=result.fileList.length; i<l; i++){
 						$fileListTblBody.append('<tr><td>' + result.fileList[i] + '</td></tr>')
@@ -121,7 +121,7 @@ $(function(){
 				}
 				
 				var $conflict_tbl = $('#conflictFileInfoTbl');
-				var $conflict_tbody = $conflict_tbl.children('tbody').children().remove().end();
+				var $conflict_tbody = $conflict_tbl.children('tbody').empty();
 				var conflict_file_info_list = result.conflict_file_info_list;
 				var conflict_dict = {};
 				if($.isArray(conflict_file_info_list)){
@@ -156,7 +156,7 @@ $(function(){
 		if($wrap.size() == 0) {
 			return;
 		}
-		$wrap.children().remove();
+		$wrap.empty();
 		var $alert = $('<div class="alert">');
 		$alert.html(msg);
 		if(closable !== false) {

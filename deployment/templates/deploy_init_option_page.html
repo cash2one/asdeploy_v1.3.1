@@ -57,7 +57,7 @@ $(function(){
 });
 function buildPatchGroupSel(projectId){
 	var $patchGroupSel = $('#patchGroupSel');
-	$patchGroupSel.parent().hide().end().children().remove();
+	$patchGroupSel.parent().hide().end().empty();
 	$.getJSON('/queryPatchGroups/', {
 		project_id: projectId,
 		status: 'testing'

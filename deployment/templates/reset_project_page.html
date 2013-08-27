@@ -226,7 +226,7 @@ function showAlert(wrap, msg, status, closable){
 	if($wrap.size() == 0) {
 		return;
 	}
-	$wrap.children().remove();
+	$wrap.empty();
 	var $alert = $('<div class="alert">');
 	$alert.html(msg);
 	if(closable !== false) {

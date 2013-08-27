@@ -126,7 +126,7 @@ $(function(){
 		
 		// 刷新服务器列表
 		var $serverListUl = $('#serverListUl');
-		$serverListUl.children().remove();
+		$serverListUl.empty();
 		for(var i=0; i<serverIdxArr.length; i++){
 			$serverListUl.append('<li>' + serverInfo[projectName][serverIdxArr[i]] + '</li>');
 		}
@@ -271,8 +271,7 @@ $(function(){
 		$('#fileTreeArea').slideUp('fast');
 	});
 	$('#selProject').change(function(){
-		var $ul = $('#checkServerUl');
-		$ul.children().remove();
+		var $ul = $('#checkServerUl').empty();
 		var $this = $(this);
 		var val = $this.val();
 		var serverArr = serverInfo[val.split('|')[1]];
@@ -297,7 +296,7 @@ $(function(){
 
 //init file tree
 function initFileTree(projectId, projectWarName, serverIdx, serverName, folderType){
-	$('#fileTre').children().remove();
+	$('#fileTre').empty();
 	try{
 		var setting = {
 			async: {
