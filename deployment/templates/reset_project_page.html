@@ -12,12 +12,26 @@
 	font-weight: bold;
 	background-color: #ccc;
 }
+#logContent > br {
+	font-size: 0px;
+	line-height: 0px;
+}
 </style>
 
 {% endblock %}
 
 {% block native_js %}
 <script>
+function unescapeHtml(str){
+	if(!str) {
+		return str;
+	}
+	str = str.replace(/&amp;/g, '&');
+	str = str.replace(/&quot;/g, '"');
+	str = str.replace(/&lt;/g, '<');
+	str = str.replace(/&gt;/g, '>');
+	return str;
+}
 $(function(){
 	var csrfToken = $('input[name=csrfmiddlewaretoken]').val();
 	
@@ -146,7 +160,7 @@ $(function(){
 						var newLogInfoArr = [];
 						if(data.logInfo && data.logInfo.length){
 							for(var i=0; i<data.logInfo.length; i++){
-								newLogInfoArr.push(data.logInfo[i]);
+								newLogInfoArr.push(unescapeHtml(data.logInfo[i]));
 							}
 						}
 						if(newLogInfoArr.length && newLogInfoArr[0]){
