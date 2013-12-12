@@ -39,6 +39,8 @@ elif HOSTNAME.find('.bt1.') > 0:
     ENVIRONMENT = 'beta'
 elif HOSTNAME.find('.ot1.') > 0:
     ENVIRONMENT = 'omega'
+elif HOSTNAME.find('.gt1') > 0:
+    ENVIRONMENT = 'gamma'
 else:
     ENVIRONMENT = 'localhost'
 
@@ -61,6 +63,11 @@ DB_PARAMS = {
         'host': '192.168.190.25',
         'username': 'root',
         'password': 'mysqlpwd1',
+    },
+    'gamma': {
+        'host': '192.168.120.110',
+        'username': 'root',
+        'password': 'mysqlpwd1'
     },
     'localhost': {
         'host': '127.0.0.1',
@@ -101,7 +108,16 @@ WEB_SERVERS = {
         'as-cms': ['memcms0.ot1.ablesky.com'],
         'as-liveservice': ['liveservice0.ot1.ablesky.com', 'liveservice1.ot1.ablesky.com'],
         'as-mobile': ['mobile1.ot1.ablesky.com']
-    },    
+    },
+    'gamma': {
+        'as-web': ['web3mc.gt1.ablesky.com', 'web3md.gt1.ablesky.com'],
+        'as-passport': ['passport3mc.gt1.ablesky.com', 'passport3md.gt1.ablesky.com'],
+        'as-search': ['se3mc.gt1.ablesky.com', 'se3md.gt1.ablesky.com'],
+        'as-im': ['im3mc.gt1.ablesky.com', 'im3md.gt1.ablesky.com'],
+        'as-cms': ['cms3mc.gt1.ablesky.com'],
+        'as-liveservice': ['liveservice3mc.gt1.ablesky.com'],
+        'as-mobile': ['mobile3mc.gt1.ablesky.com'],
+    },
     'localhost': {
         'as-web': ['web0.at1.ablesky.com'],
         'as-passport': ['passport0.at1.ablesky.com', 'passport1.at1.ablesky.com'],
