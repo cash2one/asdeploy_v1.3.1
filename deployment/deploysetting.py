@@ -140,6 +140,8 @@ DEPLOY_LOG_PATH = SHELL_ROOT_PATH + DEPLOY_LOG_NAME
 
 # 文件上传的临时目录
 DPL_FILE_UPLOAD_TEMP_DIR = '/d/content/web-app-bak/ableskyapps/tempuploads/'
+if not os.path.isdir(DPL_FILE_UPLOAD_TEMP_DIR):  # 如果上传文件的临时目录不存在，则启动的时候创建下。如果d盘没有挂载，那么显然工程也就启动不了了
+    os.makedirs(DPL_FILE_UPLOAD_TEMP_DIR)
 
 # 保存backup source的本地目录，用于reset发布
 DPL_BACKUP_SOURCE_LOCAL_DIR = '/d/content/web-app-bak/ableskyapps/backupsources/'
