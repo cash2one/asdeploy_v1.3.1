@@ -71,8 +71,13 @@ urlpatterns = patterns('',
     (r'^backupOnlineFile/(?P<project_id>\d+)/(?P<server_idx_list>[\d_]+)/$', backup_online_file),
     (r'^saveFileFromOnlineEditor/(?P<project_id>\d+)/(?P<server_idx_list>[\d_]+)/$', save_file_from_online_editor),
     
+    # ablejs构建依赖查询
+    (r'^queryAblejsDependencyPage/$', query_ablejs_dependency_page),
+    (r'^queryAblejsDependency/$', query_ablejs_dependency),
+    
     #api for test
     (r'testAddPatchFileToGroup/(?P<patch_group_id>\d+)/$', test_add_patch_file_to_group),
     (r'testGenerateConflictDetailForDeployRecord/$', test_generate_conflict_detial_for_deploy_record),
     (r'testRawSql/$', test_raw_sql),
+
 )

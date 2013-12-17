@@ -1355,3 +1355,26 @@ def ignore_reset_record(request):
     return HttpResponse(json.dumps({
         'isSuccess': True
     }))
+
+@login_required
+def query_ablejs_dependency_page(request):
+    return render_to_response('query_ablejs_dependency_page.html', RequestContext(request))
+
+@login_required
+def query_ablejs_dependency(request):
+    query_type = request.GET.get('queryType')
+    query_value = request.GET.get('queryValue')
+    cmd = ''
+    if query_value:
+        if query_type == 'relativePath':
+            cmd = 'ablejs --cli --filemap-path ' + query_value
+        elif query_type == 'hashcode':
+            cmd = 'ablejs --cli --filemap-fingerprint ' + query_value
+    result_info = cmd and os.popen(cmd) or {}
+    result_arr = []
+    for line in result_info:
+        result_arr.append(line)
+    result = len(result_arr) > 0 and result_arr[0] or '{}'
+    if result == 'undefined' or result == 'null':
+        result = '{}'
+    return HttpResponse(result)
