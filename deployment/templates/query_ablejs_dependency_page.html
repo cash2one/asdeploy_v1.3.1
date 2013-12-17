@@ -38,15 +38,22 @@ function initToggleQueryTypeBtn() {
 }
 
 function initQueryBtn() {
+	var $tbody = $('#tbody');
 	$('#queryBtn').click(function(){
 		$.getJSON('/queryAblejsDependency/', {
 			queryType: $('#queryType').attr('data-value') || 'hashcode',
 			queryValue: $('#queryValue').val()
 		}, function(data){
-			if(!data || (!data.identifier && !data.fingerprint)) {
-				fillEmptyResult();
+			if(!data) {
+				fillEmptyResult($tbody);
 			} else {
-				fillQueryResult(data);
+				$tbody.empty();
+				var list = data.list;
+				if($.isArray(list)) {
+					fillQueryResultList(list, $tbody);
+				} else {
+					fillQueryResult(data, $tbody);
+				}
 			}
 		})
 	});
@@ -59,13 +66,25 @@ function initClearQueryBtn() {
 }
 
 
-function fillEmptyResult() {
-	$('#tbody').empty().append('<tr><td colspan="2">未查询到任何结果</td></td>');
+function fillEmptyResult($tbody) {
+	$tbody.empty().append('<tr><td colspan="2">未查询到任何结果</td></td>');
 }
 
-function fillQueryResult(data) {
-	var $tbody = $('#tbody');
-	$tbody.empty();
+function fillQueryResultList(list, $tbody) {
+	if(list.length == 0) {
+		fillEmptyResult($tbody);
+		return;
+	}
+	$.each(list, function(i, obj){
+		fillQueryResult(obj, $tbody);
+	});
+}
+
+function fillQueryResult(data, $tbody) {
+	if(!data.identifier && !data.fingerprint) {
+		fillEmptyResult($tbody);
+		return;
+	}
 	if(data.identifier) {
 		$tbody.append('<tr><td>identifier</td><td>' + data.identifier + '</td></tr>');
 	} else if(data.fingerprint) {
