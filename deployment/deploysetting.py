@@ -161,6 +161,7 @@ if not os.path.isdir(DPL_FILE_UPLOAD_TEMP_DIR):  # 如果上传文件的临时�
 
 # 保存backup source的本地目录，用于reset发布
 DPL_BACKUP_SOURCE_LOCAL_DIR = '/d/content/web-app-bak/ableskyapps/backupsources/'
+DPL_BACKUP_MECHANISM_ENABLED = False
 
 
 # ftp运行目录

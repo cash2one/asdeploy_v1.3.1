@@ -144,11 +144,13 @@ def deploy_init_option_page(request):
             else:
                 return render_to_response('deploy_project_page.html', params)
         
-    # 看下有没有新的backup source
-    try:
-        new_backup_source_list = _get_new_backup_source_list()
-    except:
-        new_backup_source_list = []
+    # 看下有没有新的backup source，注意backup机制是否有被开启
+    new_backup_source_list = []
+    if DPL_BACKUP_MECHANISM_ENABLED:
+        try:
+            new_backup_source_list = _get_new_backup_source_list()
+        except:
+            pass
     
     params = RequestContext(request, {
         'error_msg': error_msg,
@@ -451,10 +453,10 @@ def _check_backup_source_before_group_deploy():
         return False
     return True
 
-# 查看当前环境是否需要reset
+# 查看当前环境是否需要reset, 在backup机制被激活的情况下，hasNew才有可能为true
 def has_new_backup_source_for_current_env(request):
     return HttpResponse(json.dumps({
-        'hasNew': not _check_backup_source_before_group_deploy()
+        'hasNew': DPL_BACKUP_MECHANISM_ENABLED and not _check_backup_source_before_group_deploy()
     }))
     
 
