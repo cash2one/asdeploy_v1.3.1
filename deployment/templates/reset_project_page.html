@@ -164,7 +164,7 @@ $(function(){
 							}
 						}
 						if(newLogInfoArr.length && newLogInfoArr[0]){
-							$logContent.html($logContent.html() + newLogInfoArr.join('<br/>'));
+							$logContent.append(newLogInfoArr.join('<br/>'));
 						}
 						$logContent.scrollTop($logContent[0].scrollHeight - $logContent.height());
 						setTimeout(readLogOnRealtime, logReadInterval)

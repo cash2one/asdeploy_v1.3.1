@@ -17,7 +17,7 @@ class Deployer(threading.Thread):
         threading.Thread.__init__(self)
         self.record = record
         self.item = record.deploy_item
-        self.direct = direct
+        self.direct = direct    # 其实应该叫type
     
     def run(self):
         record_id_str = unicode(self.record.id)
