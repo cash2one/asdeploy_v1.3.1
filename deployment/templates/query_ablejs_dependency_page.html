@@ -40,9 +40,12 @@ function initToggleQueryTypeBtn() {
 function initQueryBtn() {
 	var $tbody = $('#tbody');
 	$('#queryBtn').click(function(){
+		var queryType = $('#queryType').attr('data-value') || 'hashcode',
+			queryValue = processQueryValue(queryType, $('#queryValue').val());
+		$('#queryValue').val(queryValue);
 		$.getJSON('/queryAblejsDependency/', {
-			queryType: $('#queryType').attr('data-value') || 'hashcode',
-			queryValue: $('#queryValue').val()
+			queryType: queryType,
+			queryValue: queryValue
 		}, function(data){
 			if(!data) {
 				fillEmptyResult($tbody);
@@ -58,6 +61,18 @@ function initQueryBtn() {
 		})
 	});
 }
+
+function processQueryValue(queryType, queryValue) {
+	if(!queryValue || queryType != 'hashcode') {
+		return queryValue;
+	}
+	if(/^[0-9a-zA-Z]{7,9}$/.test(queryValue)) {
+		return queryValue;
+	}
+	var re = /([0-9a-zA-Z]{7,9})\.(?:js|css|jpg|gif|png|jpeg|ico)/;
+	return re.exec(queryValue)[1] || queryValue;
+}
+
 function initClearQueryBtn() {
 	$('#clearQueryBtn').click(function(){
 		$('#queryValue').val('');
