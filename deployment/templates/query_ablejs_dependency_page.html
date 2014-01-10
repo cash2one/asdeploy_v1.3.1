@@ -63,6 +63,12 @@ function initQueryBtn() {
 }
 
 function processQueryValue(queryType, queryValue) {
+	queryValue = processHashcodeQueryValue(queryType, queryValue);
+	queryValue = processRelativePathQueryValue(queryType, queryValue);
+	return queryValue;
+}
+
+function processHashcodeQueryValue(queryType, queryValue) {
 	if(!queryValue || queryType != 'hashcode') {
 		return queryValue;
 	}
@@ -71,6 +77,17 @@ function processQueryValue(queryType, queryValue) {
 	}
 	var re = /([0-9a-zA-Z]{7,9})\.(?:js|css|jpg|gif|png|jpeg|ico)/;
 	return re.exec(queryValue)[1] || queryValue;
+}
+
+function processRelativePathQueryValue(queryType, queryValue) {
+	if(!queryValue || queryType != 'relativePath') {
+		return queryValue;
+	}
+	queryValue = queryValue.replace(/\\/g, '/');
+	var webrootFlag = 'WebRoot/';
+	var webrootPos = queryValue.indexOf(webrootFlag)
+	var relativePathBeginPos = queryValue.indexOf('/', webrootPos + webrootFlag.length);
+	return queryValue.substring(relativePathBeginPos + 1);
 }
 
 function initClearQueryBtn() {
