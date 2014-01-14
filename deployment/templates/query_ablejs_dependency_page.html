@@ -83,6 +83,9 @@ function processRelativePathQueryValue(queryType, queryValue) {
 	if(!queryValue || queryType != 'relativePath') {
 		return queryValue;
 	}
+	if(queryValue.indexOf('jsp') >= 0) {
+		return queryValue;
+	}
 	queryValue = queryValue.replace(/\\/g, '/');
 	var webrootFlag = 'WebRoot/';
 	var webrootPos = queryValue.indexOf(webrootFlag)
