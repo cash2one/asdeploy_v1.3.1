@@ -123,9 +123,9 @@ function submitCheck(){
 				<label class="control-label"><strong>发布类型:</strong></label>
 			    <div class="controls">
 			    	<select name="deployType" id="deployType" style="width:160px;">
-						<option value="">请选择...</option>
+						<!-- option value="">请选择...</option -->
+						<option value="patch" selected="selected">补丁</option>
 						<option value="war">war包</option>
-						<option value="patch">补丁</option>
 						{% if has_new_backup_source %}
 						<option value="reset">重置</option>
 						{% endif %}
