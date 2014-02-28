@@ -23,6 +23,30 @@ function highlightConflict(){
 		}
 	})
 }
+
+// 弹出新增，修改页面
+function openSaveOrUpdatePatchGroupWindow(config){
+	var config = config || {};
+	var width = config.width || 450,
+		height = config.height || 330;
+	var screenWidth = window.screen.availWidth,
+		screenHeight = window.screen.availHeight,
+		left = (screenWidth - width) / 2,
+		top = (screenHeight - height) / 2;
+	var url = '/saveOrUpdatePatchGroup/' + ( config.patchGroupId || 0 ) + '/';
+	var options = [
+		'width=' + width,
+		'height=' + height,
+		'left=' + left,
+		'top=' + top
+	].join(',');
+	window.open(url, '_blank', options);
+}
+
+function reloadPage(){
+	location.reload();
+}
+
 </script>
 {% endblock %}
 {% block content %}
@@ -32,7 +56,7 @@ function highlightConflict(){
 		<table class="table table-bordered">
 			<tbody>
 				<tr>
-					<td>补丁组名称:</td>
+					<td style="width: 40%;">补丁组名称:</td>
 					<td>{{patch_group.name}}</td>
 				</tr>
 				<tr>
@@ -49,7 +73,12 @@ function highlightConflict(){
 				</tr>
 				<tr>
 					<td>状态:</td>
-					<td>{{patch_group.status}}</td>
+					<td>
+						{% if patch_group.status == 'created' %}已创建{% endif %}
+						{% if patch_group.status == 'testing' %}测试中{% endif %}
+						{% if patch_group.status == 'stoped' %}已完成{% endif %}
+						{% if patch_group.status == 'finished' %}已终结{% endif %}
+					</td>
 				</tr>
 				<tr>
 					<td>创建时间:</td>
@@ -59,6 +88,13 @@ function highlightConflict(){
 					<td>完成时间:</td>
 					<td>{{patch_group.formated_finish_time}}</td>
 				</tr>
+				{% if user.id == patch_group.creator.id or user.is_superuser %}
+				<tr>
+					<td colspan="2" style="text-align: center;">
+						<button class="btn btn-primary" onclick="openSaveOrUpdatePatchGroupWindow({patchGroupId: '{{patch_group.id}}'});">修改</button>
+					</td>
+				</tr>
+				{% endif %}
 			</tbody>
 		</table>
 	</div>
